@@ -149,6 +149,12 @@ export type VendorTerms = Readonly<{
   beneficiaryBankName?: string;
 }>;
 
+export type ExtractedSupplierBankDetails = Readonly<{
+  accountNumber?: string;
+  ifscCode?: string;
+  bankName?: string;
+}>;
+
 /** Stores the single currently agreed term set for a vendor. */
 export function saveVendorTerms(database: Database, terms: VendorTerms): void {
   if (!nonEmpty(terms.vendorId) || !nonEmpty(terms.tdsSection)) throw new Error("vendor and TDS section must not be empty");
@@ -172,4 +178,24 @@ export function saveVendorTerms(database: Database, terms: VendorTerms): void {
       terms.retentionBasisPoints, terms.paymentDays, terms.beneficiaryName ?? null, terms.beneficiaryAccountNumber ?? null,
       terms.beneficiaryIfsc ?? null, terms.beneficiaryBankName ?? null],
   );
+}
+
+/**
+ * Records only bank details visibly extracted from a supplier invoice.  This
+ * deliberately never creates terms or manufactures a missing value: the
+ * composition layer may call it only after it has resolved an existing vendor.
+ */
+export function saveExtractedSupplierBankDetails(database: Database, vendorId: string, details: ExtractedSupplierBankDetails): void {
+  if (!nonEmpty(vendorId)) throw new Error("vendorId must not be empty");
+  const account = details.accountNumber?.trim();
+  const ifsc = details.ifscCode?.trim();
+  const bank = details.bankName?.trim();
+  if ((account !== undefined && account.length === 0) || (ifsc !== undefined && ifsc.length === 0) || (bank !== undefined && bank.length === 0)) {
+    throw new Error("extracted bank details must not be blank");
+  }
+  database.run(`UPDATE vendor_terms SET
+    beneficiary_account_number = COALESCE(?, beneficiary_account_number),
+    beneficiary_ifsc = COALESCE(?, beneficiary_ifsc),
+    beneficiary_bank_name = COALESCE(?, beneficiary_bank_name)
+    WHERE vendor_id = ?`, [account ?? null, ifsc ?? null, bank ?? null, vendorId]);
 }

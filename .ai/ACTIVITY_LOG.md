@@ -196,3 +196,10 @@ The repository carries the memory, not the chat.
 - implementation commit 17ed3f180cd029786af4966ba30bfa1a185f2df8; generated page now embeds the exported exact-first search function source directly.
 - `bun test --timeout 30000`: 100 pass, 0 fail, 315 expect() calls across 15 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: removed exact preference from the one remaining search definition; `uses exact-first search when a pass reference also has a prefix match` failed because expected `PASS-77` only but received `PASS-77` plus `PASS-77-SUFFIX`; restored byte-for-byte.
+## 2026-09-06 00:00 IST — /root — START STAGE-9-COMPOSITION
+- Building post-stage end-to-end batch composition using the merged production ingestion, segmentation, extraction, ledger, matching, payment, and report-facing store paths.
+
+## 2026-09-06 00:00 IST — /root — FINISH STAGE-9-COMPOSITION
+- implementation commits a2abc77 and f64365b; composed the persisted production ingest/classify, segment, extract, accrual, match, and simulated payment-draft paths, with content-hash source-document linkage.
+- `bun test`: 102 pass, 0 fail, 338 expect() calls across 16 files; `bun run typecheck` and `git diff --check`: passed.
+- mutation check: removed the `ThreeWayMatcher.run` handoff; both named Stage 9 E2E tests failed, including expected accrual status `invoiced`, received `incurred`; restored exactly and reran green.

@@ -79,7 +79,20 @@ function reportData(database: Database): ReportData {
   for (const { runId, ...line } of lineRows) groupedLines.set(runId, [...(groupedLines.get(runId) ?? []), line]);
   const paymentRuns = rows<Omit<PaymentRun, "lines">>(database, `SELECT id, run_on AS runOn, reference, status FROM payment_runs ORDER BY run_on ASC, id ASC`)
     .map((run) => ({ ...run, lines: groupedLines.get(run.id) ?? [] }));
-  const documents = hasTable(database, "ingest_documents") && hasTable(database, "ingest_pages")
+  const composedDocuments = hasTable(database, "source_documents") && hasTable(database, "ingest_pages")
+    ? rows<Document>(database, `
+      SELECT s.id, COALESCE(v.name, 'Unassigned vendor') AS vendor,
+        COALESCE((SELECT group_concat(document_type, ', ') FROM (SELECT DISTINCT p2.document_type FROM ingest_pages p2 WHERE p2.document_sha256 = s.ingest_source_sha256 AND p2.page_number BETWEEN s.ingest_first_page AND s.ingest_last_page ORDER BY p2.document_type)), 'unresolved') AS type,
+        s.ingest_last_page - s.ingest_first_page + 1 AS pageCount,
+        min(p.confidence_basis_points) AS confidenceBasisPoints
+      FROM source_documents s LEFT JOIN vendors v ON v.id = s.vendor_id
+      LEFT JOIN ingest_pages p ON p.document_sha256 = s.ingest_source_sha256 AND p.page_number BETWEEN s.ingest_first_page AND s.ingest_last_page
+      WHERE s.ingest_source_sha256 IS NOT NULL
+      GROUP BY s.id, v.name, s.ingest_source_sha256, s.ingest_first_page, s.ingest_last_page
+      ORDER BY s.ingest_source_sha256 ASC, s.ingest_first_page ASC, s.id ASC
+    `).map((row) => ({ ...row, pageCount: integer(row.pageCount, "pageCount"), confidenceBasisPoints: row.confidenceBasisPoints === null ? null : integer(row.confidenceBasisPoints, "confidenceBasisPoints") }))
+    : [];
+  const documents = composedDocuments.length > 0 ? composedDocuments : hasTable(database, "ingest_documents") && hasTable(database, "ingest_pages")
     ? rows<Document>(database, `
       SELECT d.source_sha256 AS id, 'Unassigned vendor' AS vendor,
         COALESCE((SELECT group_concat(document_type, ', ') FROM (SELECT DISTINCT p2.document_type FROM ingest_pages p2 WHERE p2.document_sha256 = d.source_sha256 ORDER BY p2.document_type)), 'unresolved') AS type,

@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 8 ready for review.
+Last updated: 2026-09-06 — Stage 9 post-stage composition is in REVIEW; the eight-stage board is retained unchanged.
 
 ---
 
@@ -25,10 +25,10 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Stage 8 — The report page — ready for review.
-**Main:** Stages 1–7 merged — foundation through matching and simulated payment runs.
-**Suite on main:** 93 pass, 0 fail, 286 expect() calls across 14 files; typecheck clean.
-**Blocking:** nothing.
+**Stage:** Post-stage composition — Stage 9 — REVIEW. The original eight-stage board below is retained unchanged.
+**Main:** Stages 1–8 merged — foundation through the offline report page.
+**Suite in Stage 9 worktree:** 102 pass, 0 fail, 338 expect() calls across 16 files; typecheck clean.
+**Blocking:** nothing. Stage 9 persists `source_documents.ingest_source_sha256` with an inclusive segmented page range for reliable ingestion, ledger, and report joins; no original stage was renumbered.
 
 ---
 

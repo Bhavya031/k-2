@@ -59,6 +59,11 @@ export function migrateStore(database: Database): void {
         document_id TEXT NOT NULL REFERENCES source_documents(id),
         page_number INTEGER NOT NULL CHECK (
           typeof(page_number) = 'integer' AND page_number > 0
+        ),
+        document_type TEXT,
+        extraction_confidence_basis_points INTEGER CHECK (
+          extraction_confidence_basis_points IS NULL OR (typeof(extraction_confidence_basis_points) = 'integer'
+          AND extraction_confidence_basis_points BETWEEN 0 AND 10000)
         )
       ) STRICT;
 
@@ -218,6 +223,9 @@ export function migrateStore(database: Database): void {
         typeof(tds_threshold_paise) = 'integer' AND tds_threshold_paise >= 0
       )`);
     }
+    const documentPageColumns = columns("document_pages");
+    if (!documentPageColumns.has("document_type")) database.exec("ALTER TABLE document_pages ADD COLUMN document_type TEXT");
+    if (!documentPageColumns.has("extraction_confidence_basis_points")) database.exec("ALTER TABLE document_pages ADD COLUMN extraction_confidence_basis_points INTEGER CHECK (extraction_confidence_basis_points IS NULL OR (typeof(extraction_confidence_basis_points) = 'integer' AND extraction_confidence_basis_points BETWEEN 0 AND 10000))");
     const paymentRunColumns = columns("payment_runs");
     if (!paymentRunColumns.has("reference")) database.exec("ALTER TABLE payment_runs ADD COLUMN reference TEXT");
     if (!paymentRunColumns.has("notes")) database.exec("ALTER TABLE payment_runs ADD COLUMN notes TEXT");

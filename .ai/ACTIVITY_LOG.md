@@ -180,3 +180,6 @@ The repository carries the memory, not the chat.
 - 2026-09-06 — Stage 7 Piece B (payment runs) FINISH — 81 pass, 0 fail, 265 expect() calls across 13 files; typecheck clean; threshold mutation failed as expected.
 - 2026-09-06 — Stage 7 Piece B review update — 82 pass, 0 fail, 267 expect() calls across 13 files; vendor aggregate mutation failed as expected and was restored.
 - 2026-09-06 — Stage 7 Piece B rebased after Piece A; 93 pass, 0 fail, 286 expect() calls across 14 files; typecheck clean.
+
+## 2026-09-06 — /root — START STAGE-8
+- Building the deterministic, self-contained offline report page from persisted synthetic/simulated store records.

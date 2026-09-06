@@ -8,6 +8,8 @@ import { askLedger, executeLedgerPlan, ledgerPlanSchema } from "../src/asking/le
 import { startLedgerServer } from "../src/asking/server.ts";
 import type { StructuredProvider, StructuredRequest } from "../src/model/boundary.ts";
 import { migrateStore } from "../src/store/schema.ts";
+import { migrateIngestStore } from "../src/ingest/ingest.ts";
+import { ReviewQueue } from "../src/review/queue.ts";
 
 const databases: Database[] = [];
 function store(): Database { const database = new Database(":memory:"); databases.push(database); migrateStore(database); return database; }
@@ -18,6 +20,12 @@ function fixture(database: Database): void {
   for (const id of ["doc-1", "doc-2"]) database.run("INSERT INTO source_documents (id,vendor_id,document_status) VALUES (?,'v','classified')", [id]);
   database.run("INSERT INTO accruals (id,source_document_id,vendor_id,paper_reference,amount_paise,quantity_thousandths,unit,incurred_on,status,extraction_confidence_basis_points) VALUES ('a-1','doc-1','v','PASS-77',155250,12420,'tonne','2026-08-11','incurred',9800)");
   database.run("INSERT INTO accruals (id,source_document_id,vendor_id,paper_reference,amount_paise,quantity_thousandths,unit,incurred_on,status,extraction_confidence_basis_points) VALUES ('a-2','doc-2','v','PASS-88',10000,1000,'tonne','2026-08-12','invoiced',9800)");
+  migrateIngestStore(database);
+  database.run("INSERT INTO ingest_assets (sha256,asset_type,media_type,bytes) VALUES ('source-a','original_pdf','application/pdf',?)", [new Uint8Array([3])]);
+  database.run("INSERT INTO ingest_assets (sha256,asset_type,media_type,bytes) VALUES ('image-a','rendered_page','image/png',?)", [new Uint8Array([137,80,78,71])]);
+  database.run("INSERT INTO ingest_documents (source_sha256,original_filename,page_count) VALUES ('source-a','synthetic.pdf',1)");
+  database.run("INSERT INTO ingest_pages (document_sha256,page_number,image_sha256,classification_status,document_type,confidence_basis_points,summary,labels_json) VALUES ('source-a',1,'image-a','classified','invoice',9800,'Synthetic.','[]')");
+  database.run("UPDATE source_documents SET ingest_source_sha256='source-a',ingest_first_page=1,ingest_last_page=1 WHERE id='doc-1'");
   database.run("INSERT INTO review_items (id,subject_id,decision_prompt,evidence,priority,created_at,state) VALUES ('r-1','doc-1','Check synthetic source.','Synthetic evidence.',90,'2026-08-12T00:00:00Z','pending')");
   database.run("INSERT INTO payment_runs (id,run_on,status) VALUES ('run-1','2026-08-20','simulated')");
   database.run("INSERT INTO payment_run_lines (id,payment_run_id,accrual_id,gross_paise,tds_paise,retention_paise,net_paise,status) VALUES ('line-1','run-1','a-2',10000,200,500,9300,'executed_simulated')");
@@ -69,7 +77,7 @@ describe("Stage 10 asking the ledger", () => {
     }
   });
 
-  test("serves only on loopback, exposes live overview, and performs no writes", async () => {
+  test("serves only on loopback and exposes overview", async () => {
     const directory = await mkdtemp(join(tmpdir(), "k2-asking-")); const path = join(directory, "store.sqlite");
     const writable = new Database(path); migrateStore(writable); fixture(writable); writable.close();
     const server = startLedgerServer({ databasePath: path, port: 0, provider: new CannedProvider([{ kind: "review_queue", template: "plain" }]) });
@@ -83,4 +91,32 @@ describe("Stage 10 asking the ledger", () => {
       expect((check.query("SELECT count(*) AS count FROM review_items").get() as { count: number }).count).toBe(1); check.close();
     } finally { server.stop(); await rm(directory, { recursive: true, force: true }); }
   });
+
+  test("claims then approves through ReviewQueue, records audit, and cannot overwrite a human result", async () => {
+    const database = store(); fixture(database); const queue = new ReviewQueue(database);
+    const claimed = queue.claimNext("Asha", "2026-09-01T00:00:00.000Z");
+    expect(claimed?.id).toBe("r-1");
+    queue.decide("r-1", { outcome: "approve", decidedBy: "Asha", decidedAt: "2026-09-01T00:01:00.000Z" });
+    expect(database.query("SELECT state,decided_by AS actor FROM review_items WHERE id='r-1'").get()).toEqual({ state: "decided", actor: "Asha" });
+    expect(database.query("SELECT outcome,decided_by AS actor FROM review_decision_audit WHERE review_item_id='r-1'").get()).toEqual({ outcome: "approve", actor: "Asha" });
+    expect(() => queue.decide("r-1", { outcome: "reject", decidedBy: "Asha", decidedAt: "2026-09-01T00:02:00.000Z" })).toThrow("review item must be claimed by the decision maker");
+  });
+
+  test("correct route records a typed human correction and serves only linked rendered page bytes", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "k2-review-")); const path = join(directory, "store.sqlite"); const writable = new Database(path); migrateStore(writable); fixture(writable); writable.close();
+    const server = startLedgerServer({ databasePath:path,port:0,provider:new CannedProvider([]) });
+    try {
+      const image = await fetch(`${server.url}api/documents/doc-1/pages/1`); expect(image.status).toBe(200); expect([...new Uint8Array(await image.arrayBuffer())]).toEqual([137,80,78,71]);
+      expect((await fetch(`${server.url}api/documents/nope/pages/1`)).status).toBe(404);
+      const claimed = await fetch(`${server.url}api/review/claim`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({actor:"Asha"})}); expect((await claimed.json()).item.id).toBe("r-1");
+      const response = await fetch(`${server.url}api/review/r-1/decision`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({actor:"Asha",outcome:"correct",kind:"quantity_thousandths",value:"12421"})}); expect(response.status).toBe(200);
+      const check = new Database(path,{readonly:true}); expect(check.query("SELECT value_kind,value_integer,provenance FROM review_values WHERE review_item_id='r-1'").get()).toEqual({value_kind:"quantity_thousandths",value_integer:12421,provenance:"human"}); check.close();
+    } finally { server.stop(); await rm(directory,{recursive:true,force:true}); }
+  });
+
+  test("rejects an unsafe integer query result before it can be rendered", () => {
+    const database = store(); fixture(database); database.run("UPDATE accruals SET amount_paise=9007199254740992 WHERE id='a-1'");
+    expect(() => executeLedgerPlan(database,{kind:"pass_reference",reference:"PASS-77",template:"brief"})).toThrow("amount must be a safe integer");
+  });
+
 });

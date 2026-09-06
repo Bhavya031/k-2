@@ -40,7 +40,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
-| 1 | Foundation | DISPATCHED | #3 merged; #2 integrating | 28e5e23 | 4 pass, 0 fail |
+| 1 | Foundation | DISPATCHED | #3 and #2 merged; #4 integrating | 1e12ef4 | 17 pass, 0 fail |
 | 2 | Model boundary | TODO | | | |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |

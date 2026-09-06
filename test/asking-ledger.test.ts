@@ -18,14 +18,18 @@ function fixture(database: Database): void {
   database.run("INSERT INTO vendors (id,name,status) VALUES ('v','Synthetic Quarry','active')");
   database.run("INSERT INTO vendor_terms (vendor_id,rate_paise_per_tonne,effective_on,payment_days) VALUES ('v',12500,'2026-01-01',14)");
   for (const id of ["doc-1", "doc-2"]) database.run("INSERT INTO source_documents (id,vendor_id,document_status) VALUES (?,'v','classified')", [id]);
+  database.run("INSERT INTO source_documents (id,document_status) VALUES ('doc-3','needs_review')");
   database.run("INSERT INTO accruals (id,source_document_id,vendor_id,paper_reference,amount_paise,quantity_thousandths,unit,incurred_on,status,extraction_confidence_basis_points) VALUES ('a-1','doc-1','v','PASS-77',155250,12420,'tonne','2026-08-11','incurred',9800)");
   database.run("INSERT INTO accruals (id,source_document_id,vendor_id,paper_reference,amount_paise,quantity_thousandths,unit,incurred_on,status,extraction_confidence_basis_points) VALUES ('a-2','doc-2','v','PASS-88',10000,1000,'tonne','2026-08-12','invoiced',9800)");
   migrateIngestStore(database);
   database.run("INSERT INTO ingest_assets (sha256,asset_type,media_type,bytes) VALUES ('source-a','original_pdf','application/pdf',?)", [new Uint8Array([3])]);
   database.run("INSERT INTO ingest_assets (sha256,asset_type,media_type,bytes) VALUES ('image-a','rendered_page','image/png',?)", [new Uint8Array([137,80,78,71])]);
-  database.run("INSERT INTO ingest_documents (source_sha256,original_filename,page_count) VALUES ('source-a','synthetic.pdf',1)");
+  database.run("INSERT INTO ingest_assets (sha256,asset_type,media_type,bytes) VALUES ('image-b','rendered_page','image/png',?)", [new Uint8Array([137,80,78,72])]);
+  database.run("INSERT INTO ingest_documents (source_sha256,original_filename,page_count) VALUES ('source-a','synthetic.pdf',2)");
   database.run("INSERT INTO ingest_pages (document_sha256,page_number,image_sha256,classification_status,document_type,confidence_basis_points,summary,labels_json) VALUES ('source-a',1,'image-a','classified','invoice',9800,'Synthetic.','[]')");
+  database.run("INSERT INTO ingest_pages (document_sha256,page_number,image_sha256,classification_status,document_type,confidence_basis_points,summary,labels_json) VALUES ('source-a',2,'image-b','classified','delivery_challan',9700,'Synthetic.','[]')");
   database.run("UPDATE source_documents SET ingest_source_sha256='source-a',ingest_first_page=1,ingest_last_page=1 WHERE id='doc-1'");
+  database.run("UPDATE source_documents SET ingest_source_sha256='source-a',ingest_first_page=2,ingest_last_page=2 WHERE id='doc-2'");
   database.run("INSERT INTO review_items (id,subject_id,decision_prompt,evidence,priority,created_at,state) VALUES ('r-1','doc-1','Check synthetic source.','Synthetic evidence.',90,'2026-08-12T00:00:00Z','pending')");
   database.run("INSERT INTO payment_runs (id,run_on,status) VALUES ('run-1','2026-08-20','simulated')");
   database.run("INSERT INTO payment_run_lines (id,payment_run_id,accrual_id,gross_paise,tds_paise,retention_paise,net_paise,status) VALUES ('line-1','run-1','a-2',10000,200,500,9300,'executed_simulated')");
@@ -108,10 +112,24 @@ describe("Stage 10 asking the ledger", () => {
     try {
       const image = await fetch(`${server.url}api/documents/doc-1/pages/1`); expect(image.status).toBe(200); expect([...new Uint8Array(await image.arrayBuffer())]).toEqual([137,80,78,71]);
       expect((await fetch(`${server.url}api/documents/nope/pages/1`)).status).toBe(404);
+      expect((await fetch(`${server.url}api/documents/doc-1/pages/2`)).status).toBe(404);
       const claimed = await fetch(`${server.url}api/review/claim`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({actor:"Asha"})}); expect((await claimed.json()).item.id).toBe("r-1");
       const response = await fetch(`${server.url}api/review/r-1/decision`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({actor:"Asha",outcome:"correct",kind:"quantity_thousandths",value:"12421"})}); expect(response.status).toBe(200);
       const check = new Database(path,{readonly:true}); expect(check.query("SELECT value_kind,value_integer,provenance FROM review_values WHERE review_item_id='r-1'").get()).toEqual({value_kind:"quantity_thousandths",value_integer:12421,provenance:"human"}); check.close();
     } finally { server.stop(); await rm(directory,{recursive:true,force:true}); }
+  });
+
+  test("lists document accruals and unresolved documents, then returns document pages and open reviews", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "k2-documents-")); const path = join(directory, "store.sqlite"); const writable = new Database(path); migrateStore(writable); fixture(writable); writable.close();
+    const server = startLedgerServer({ databasePath:path,port:0,provider:new CannedProvider([]) });
+    try {
+      const documents = await (await fetch(`${server.url}api/documents`)).json() as Array<{ id: string; vendorName: string | null; documentType: string | null; pageCount: number; documentStatus: string; accrual: { paperReference: string; amountPaise: number; quantityThousandths: number; unit: string; incurredOn: string } | null; openReviewCount: number }>;
+      expect(documents).toContainEqual({ id:"doc-1",vendorName:"Synthetic Quarry",documentType:"invoice",pageCount:1,documentStatus:"classified",accrual:{paperReference:"PASS-77",amountPaise:155250,quantityThousandths:12420,unit:"tonne",incurredOn:"2026-08-11"},openReviewCount:1 });
+      expect(documents).toContainEqual({ id:"doc-3",vendorName:null,documentType:null,pageCount:0,documentStatus:"needs_review",accrual:null,openReviewCount:0 });
+      const detail = await (await fetch(`${server.url}api/documents/doc-1`)).json() as { document: { id: string; accrual: { amountPaise: number } | null }; pages: Array<{ pageNumber: number; documentType: string; confidenceBasisPoints: number }>; reviews: Array<{ id: string; prompt: string; evidence: string }> };
+      expect(detail).toEqual({ document:expect.objectContaining({id:"doc-1",accrual:expect.objectContaining({amountPaise:155250})}),pages:[{pageNumber:1,documentType:"invoice",confidenceBasisPoints:9800}],reviews:[{id:"r-1",prompt:"Check synthetic source.",evidence:"Synthetic evidence."}] });
+      expect((await fetch(`${server.url}api/documents/nope`)).status).toBe(404);
+    } finally { server.stop(); await rm(directory, { recursive:true, force:true }); }
   });
 
   test("rejects an unsafe integer query result before it can be rendered", () => {

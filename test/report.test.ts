@@ -50,7 +50,8 @@ describe("Stage 8 offline report", () => {
   test("renders one unbilled, variance, and payment line in their sections using exact paise displays", () => {
     const database = store(); reportFixture(database);
     const report = buildReport(database);
-    const payload = /const data=(.*?);const inr=/.exec(report)?.[1];
+    expect(report).toContain(`const searchExactFirst=${searchExactFirst.toString()};`);
+    const payload = /const data=(.*?);const searchExactFirst=/.exec(report)?.[1];
     const data = JSON.parse(payload!) as { unbilled: Array<{ vendor: string; paperReference: string; incurredOn: string; quantityThousandths: number; unit: string; amountPaise: number }>; variances: Array<{ variancePaise: number; cause: string }>; paymentRuns: Array<{ lines: Array<{ grossPaise: number; tdsPaise: number; retentionPaise: number; netPaise: number }> }> };
     expect(data.unbilled).toEqual([{ vendor: "Synthetic Ganesh Quarry", paperReference: "PASS-77", incurredOn: "2026-09-01", quantityThousandths: 12420, unit: "tonne", amountPaise: 155250 }]);
     expect(data.variances).toEqual([expect.objectContaining({ variancePaise: -1000, cause: "quantity_variance" })]);
@@ -73,7 +74,8 @@ describe("Stage 8 offline report", () => {
   test("resolves documents from Stage 3 ingest persistence, including type, page count, and confidence", () => {
     const database = store(); reportFixture(database);
     const report = buildReport(database);
-    const payload = /const data=(.*?);const inr=/.exec(report)?.[1];
+    expect(report).toContain(`const searchExactFirst=${searchExactFirst.toString()};`);
+    const payload = /const data=(.*?);const searchExactFirst=/.exec(report)?.[1];
     const documents = (JSON.parse(payload!) as { documents: unknown[] }).documents;
     expect(documents).toContainEqual({ id: "synthetic-stage3-document", vendor: "Unassigned vendor", type: "royalty_pass", pageCount: 2, confidenceBasisPoints: 9400 });
   });

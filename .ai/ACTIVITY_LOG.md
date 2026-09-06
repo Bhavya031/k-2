@@ -188,3 +188,11 @@ The repository carries the memory, not the chat.
 - implementation commit 1addcc544080e0950c7f956560b3cf81e8a3f33f; self-contained offline report command, persisted-store report data, exact-first search, and document page metadata landed.
 - `bun test`: 99 pass, 0 fail, 313 expect() calls across 15 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: changed unbilled `WHERE m.id IS NULL` to `WHERE m.id IS NOT NULL`; `renders one unbilled, variance, and payment line in their sections using exact paise displays` failed with expected `PASS-77` / received `MATCHED-88`; restored byte-for-byte and reran green.
+
+## 2026-09-06 — /root — START STAGE-8-FOLLOW-UP
+- Unifying shipped inline exact-first search with the exported tested definition after review found duplicated logic.
+
+## 2026-09-06 — /root — FINISH STAGE-8-FOLLOW-UP
+- implementation commit 17ed3f180cd029786af4966ba30bfa1a185f2df8; generated page now embeds the exported exact-first search function source directly.
+- `bun test --timeout 30000`: 100 pass, 0 fail, 315 expect() calls across 15 files; `bun run typecheck` and `git diff --check`: passed.
+- mutation check: removed exact preference from the one remaining search definition; `uses exact-first search when a pass reference also has a prefix match` failed because expected `PASS-77` only but received `PASS-77` plus `PASS-77-SUFFIX`; restored byte-for-byte.

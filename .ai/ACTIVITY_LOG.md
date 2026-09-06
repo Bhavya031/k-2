@@ -20,3 +20,6 @@ Format:
 ```
 
 The repository carries the memory, not the chat.
+
+## 2026-09-06 08:44 IST — root/ao — START TASK-002
+- Stage 1 core dependency-free value types: validated integer units, provenance-backed facts, and explicit bulk outcomes.

@@ -334,3 +334,22 @@ The repository carries the memory, not the chat.
 - Added the bilingual prepared-run summary and exactly two approve/reject buttons, using display-only BigInt paise formatting. Approval moves only draft lines to approved and the draft run to review; held lines remain held, all-held runs refuse, rejection only voids the run, and every completed decision writes the existing review-decision audit. No schema columns or tables were added.
 - `bun run test`: 181 pass, 0 fail, 635 `expect()` calls across 24 files; `bun run typecheck` and `git diff --check` passed. New-code grep for `fetch`, `node:http`, and `node:https`: 0 matches.
 - Required mutations, each restored exactly: (a) approving held lines failed `approves only draft lines, changes the draft run to review, and records its existing review audit` (expected held, received approved); (b) removing the approval allowlist check failed `records an unauthorized payment-run sender without output or state change` (expected ignored sender record, received none); (c) reapplying a second press failed `replies already decided on a second press and leaves state and audit unchanged` with `UNIQUE constraint failed: review_items.id`.
+## 2026-09-06 — /root — START ASK-LEDGER-DEMO-SURFACE-REPAIR
+- Repairing the loopback-only asking-ledger presentation: in-flight UX, no-match handling, tabular evidence, safe review images, and vendor-match guidance; preserving the eight-stage board table unchanged.
+
+## 2026-09-07 — /root — FINISH ASK-LEDGER-DEMO-SURFACE-REPAIR
+- Replaced the loopback asking-ledger surface with a quiet system-font presentation: responsive in-flight query state, tabular answers and secondary CSV downloads, safe document placeholders, citations, review controls, and token-only dark mode. No payment, ledger, SQL figure computation, or bank integration changed.
+- Zero-row plans now return the existing screen-answer shape with an explicit applied filter rather than presenting a CSV; unmatched vendor filters list stored vendor names without transliteration.
+- `bun run test --timeout 30000`: 178 pass, 0 fail, 618 `expect()` calls across 23 files; `bun run typecheck` and `git diff --check`: passed.
+- Required mutation `re-emit file zero-row`: named test `returns a zero-row planned file request as an explicit no-match screen answer without a file offer` failed (received `kind: "file"`, `filename: "unbilled-accruals.csv"`); restored exactly and reran green.
+- Required mutation `unconditional image`: named test `does not render an image element for an unresolvable review source` failed because the source-page guard was absent; restored exactly and reran green.
+- Started the loopback server with a populated synthetic permitted database: page response 16,705 bytes; external-host reference count 0; embedded page script parsed successfully.
+
+## 2026-09-07 — /root — START ASK-LEDGER-REFERENCE-LAYOUT
+- Restyling the loopback ask-ledger surface to the requested sidebar and focused search layout while retaining the established safe ask, empty-result, table, and evidence-image behaviour.
+
+## 2026-09-07 — /root — FINISH ASK-LEDGER-REFERENCE-LAYOUT
+- Restyled only the inline ask-ledger presentation and navigation into the requested focused sidebar/search layout. The existing localhost binding, response shapes, SQL, figures, review write path, and payment boundary are unchanged.
+- `bun run test --timeout 30000`: 188 pass, 0 fail, 794 `expect()` calls across 25 files; `bun run typecheck` and `git diff --check`: passed.
+- Mutation check: replaced the resolved-page condition with `if (true)`; named test `does not render an image element for an unresolvable review source` failed because the guarded image source was absent. Restored exactly and reran green.
+- Served a synthetic populated permitted database: page response 19,057 bytes; external-host reference count 0; stylesheet contains `resize:none` and has no `resize:vertical`. Three identical `/api/ask` requests each returned the same explicit no-match screen response.

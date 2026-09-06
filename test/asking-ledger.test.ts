@@ -134,6 +134,37 @@ describe("Stage 10 asking the ledger", () => {
     } finally { server.stop(); await rm(directory, { recursive:true, force:true }); }
   });
 
+  test("returns a zero-row planned file request as an explicit no-match screen answer without a file offer", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "k2-zero-file-")); const path = join(directory, "store.sqlite"); const writable = new Database(path); migrateStore(writable); writable.close();
+    const server = startLedgerServer({ databasePath:path, port:0, provider:new CannedProvider([{ kind:"unbilled_file" }]) });
+    try {
+      const response = await fetch(`${server.url}api/ask`, { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({question:"Give me the unbilled list as a file"}) });
+      const answer = await response.json() as { kind:string; heading:string; fragments:string[]; citations:unknown[]; filename?:string };
+      expect(answer).toEqual({ kind:"screen", heading:"No matching records", fragments:["No records matched the applied filter.", "Applied filter: Unbilled accruals."], citations:[] });
+      expect(answer.filename).toBeUndefined();
+    } finally { server.stop(); await rm(directory,{recursive:true,force:true}); }
+  });
+
+  test("does not render an image element for an unresolvable review source", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "k2-review-empty-page-")); const path = join(directory, "store.sqlite"); const writable = new Database(path); migrateStore(writable); fixture(writable); writable.run("INSERT INTO review_items (id,subject_id,decision_prompt,evidence,priority,created_at,state) VALUES ('r-2','doc-3','No page','Synthetic evidence.',80,'2026-08-12T00:00:00Z','pending')"); writable.close();
+    const server = startLedgerServer({ databasePath:path,port:0,provider:new CannedProvider([]) });
+    try {
+      const html = await (await fetch(server.url)).text();
+      expect(() => new Function(html.split("<script>",2)[1]!.split("</script>",1)[0]!)).not.toThrow();
+      expect(html).toContain('const source=documents.find(candidate=>candidate.id===doc);if(source&&source.pageCount>0){const i=image(doc,1,title,true);d.append(i);i.onclick=()=>openDocument(doc)}else d.append(node("p","No linked stored page.","muted"))');
+      expect(html).not.toContain('if(doc){const i=image(doc,1,title,true)');
+    } finally { server.stop(); await rm(directory,{recursive:true,force:true}); }
+  });
+
+  test("reports no vendor match with existing stored vendor names without transliteration", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "k2-vendor-no-match-")); const path = join(directory, "store.sqlite"); const writable = new Database(path); migrateStore(writable); fixture(writable); writable.close();
+    const server = startLedgerServer({ databasePath:path,port:0,provider:new CannedProvider([{ kind:"quarry_last_month", vendorName:"Sinthhetic Kvari", month:"2026-08", template:"brief" }]) });
+    try {
+      const answer = await (await fetch(`${server.url}api/ask`, { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({question:"What did Sinthhetic Kvari supply?"}) })).json() as { kind:string; heading:string; fragments:string[]; citations:unknown[] };
+      expect(answer).toEqual({ kind:"screen", heading:"No matching records", fragments:["No vendor matched “Sinthhetic Kvari”.", "Existing vendor names: Synthetic Quarry. Applied filter: Vendor: Sinthhetic Kvari; month: 2026-08."], citations:[] });
+    } finally { server.stop(); await rm(directory,{recursive:true,force:true}); }
+  });
+
   test("rejects an unsafe integer query result before it can be rendered", () => {
     const database = store(); fixture(database); database.run("UPDATE accruals SET amount_paise=9007199254740992 WHERE id='a-1'");
     expect(() => executeLedgerPlan(database,{kind:"pass_reference",reference:"PASS-77",template:"brief"})).toThrow("amount must be a safe integer");

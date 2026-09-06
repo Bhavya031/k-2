@@ -1,4 +1,4 @@
-import { mkdir, readdir, rename, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, extname, join, parse } from "node:path";
 
 import type { BatchPipelineResult } from "./batch.ts";
@@ -20,16 +20,20 @@ export type IntakeFileSystem = Readonly<{
   readdir(path: string): Promise<readonly string[]>;
   stat(path: string): Promise<FileStat>;
   rename(from: string, to: string): Promise<void>;
+  remove(path: string): Promise<void>;
   writeFile(path: string, contents: string): Promise<void>;
 }>;
 
 export type IntakeClock = Readonly<{ now(): Date }>;
 export type ProductionBatchEntrypoint = (args: readonly string[]) => Promise<BatchPipelineResult>;
+/** Converts one supported raster image to a temporary, single-page PDF. */
+export type IntakeImageNormalizer = (sourceImage: string, temporaryPdf: string) => Promise<void>;
 
 export type IntakeWatchDependencies = Readonly<{
   filesystem?: IntakeFileSystem;
   clock?: IntakeClock;
   runBatch?: ProductionBatchEntrypoint;
+  normalizeImage?: IntakeImageNormalizer;
   sleep?: (milliseconds: number) => Promise<void>;
   onPoll?: (result: IntakePollResult) => void;
 }>;
@@ -59,13 +63,18 @@ export type IntakeWatcher = Readonly<{
 
 const systemFileSystem: IntakeFileSystem = Object.freeze({
   mkdir: async (path, options) => { await mkdir(path, options); },
-  readdir, stat, rename, writeFile,
+  readdir, stat, rename,
+  remove: async (path) => { await rm(path, { force: true }); },
+  writeFile,
 });
 const systemClock: IntakeClock = Object.freeze({ now: () => new Date() });
 const systemSleep = (milliseconds: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-function isPdf(filename: string): boolean {
-  return extname(filename).toLowerCase() === ".pdf";
+function intakeKind(filename: string): "pdf" | "image" | undefined {
+  const extension = extname(filename).toLowerCase();
+  if (extension === ".pdf") return "pdf";
+  if (extension === ".jpg" || extension === ".jpeg" || extension === ".png") return "image";
+  return undefined;
 }
 
 function errorMessage(error: unknown): string {
@@ -96,11 +105,21 @@ function failureSidecar(destination: string): string {
   return `${destination}.error.txt`;
 }
 
+async function normalizeWithImg2pdf(sourceImage: string, temporaryPdf: string): Promise<void> {
+  const child = Bun.spawn({ cmd: ["img2pdf", "--output", temporaryPdf, sourceImage], stdout: "pipe", stderr: "pipe" });
+  const exitCode = await child.exited;
+  if (exitCode !== 0) {
+    const stderr = await new Response(child.stderr).text();
+    throw new Error(`img2pdf failed: ${stderr.trim()}`);
+  }
+}
+
 /**
- * Polls a three-folder PDF intake. A file becomes eligible only after its size
- * is identical in two consecutive polls. Each eligible file is handed to the
- * same production batch-command entrypoint as `bun run batch`; no pipeline
- * work is implemented here.
+ * Polls a three-folder PDF/JPEG/PNG intake. A file becomes eligible only after
+ * its size is identical in two consecutive polls. Raster images are normalized
+ * by img2pdf to a temporary single-page PDF before being handed to the same
+ * production batch-command entrypoint as `bun run batch`; no pipeline work is
+ * implemented here.
  */
 export function createIntakeWatcher(
   folders: IntakeFolders,
@@ -110,15 +129,18 @@ export function createIntakeWatcher(
   const filesystem = dependencies.filesystem ?? systemFileSystem;
   const clock = dependencies.clock ?? systemClock;
   const runBatch = dependencies.runBatch ?? runBatchCommand;
+  const normalizeImage = dependencies.normalizeImage ?? normalizeWithImg2pdf;
   const observedSizes = new Map<string, number>();
+  const temporaryDirectory = join(folders.intake, ".k2-intake-watch");
+  let temporarySequence = 0;
 
   async function pendingFiles(): Promise<readonly string[]> {
-    return Object.freeze((await filesystem.readdir(folders.intake)).filter(isPdf).sort((left, right) => left.localeCompare(right)));
+    return Object.freeze((await filesystem.readdir(folders.intake)).filter((filename) => intakeKind(filename) !== undefined).sort((left, right) => left.localeCompare(right)));
   }
 
   return Object.freeze({
     async poll(): Promise<IntakePollResult> {
-      await Promise.all([folders.intake, folders.processed, folders.failed].map((directory) => filesystem.mkdir(directory, { recursive: true })));
+      await Promise.all([folders.intake, folders.processed, folders.failed, temporaryDirectory].map((directory) => filesystem.mkdir(directory, { recursive: true })));
       const filenames = await pendingFiles();
       const currentPaths = new Set(filenames.map((filename) => join(folders.intake, filename)));
       for (const path of observedSizes.keys()) if (!currentPaths.has(path)) observedSizes.delete(path);
@@ -135,8 +157,11 @@ export function createIntakeWatcher(
       const failed: IntakeFailure[] = [];
       for (const filename of stable) {
         const source = join(folders.intake, filename);
+        const kind = intakeKind(filename)!;
+        const temporaryPdf = kind === "image" ? join(temporaryDirectory, `${parse(filename).name}.${temporarySequence++}.pdf`) : undefined;
         try {
-          const result = await runBatch(["--pdf", source, ...batchArguments]);
+          if (temporaryPdf !== undefined) await normalizeImage(source, temporaryPdf);
+          const result = await runBatch(["--pdf", temporaryPdf ?? source, ...batchArguments]);
           const destination = await destinationFor(filesystem, folders.processed, filename);
           await filesystem.rename(source, destination);
           observedSizes.delete(source);
@@ -153,6 +178,8 @@ export function createIntakeWatcher(
           } catch (moveError) {
             failed.push(Object.freeze({ filename, destination, errorSidecar: sidecar, error: `${message}; could not move to failed: ${errorMessage(moveError)}` }));
           }
+        } finally {
+          if (temporaryPdf !== undefined) await filesystem.remove(temporaryPdf);
         }
       }
 

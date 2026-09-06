@@ -128,3 +128,7 @@ Newest last. One line per stage, written when it merges.
   stable PDF to the existing production batch command, reports pending work,
   and moves successes/failures to their documented folders. The eight-stage
   board above remains the only stage board.
+- 2026-09-06 — POST-STAGE-INTAKE-WATCH IMAGE FOLLOW-UP: stable JPEG and PNG
+  files normalize via the available `img2pdf` system tool to temporary
+  single-page PDFs before the unchanged production batch entrypoint. Originals
+  still move to the same processed/failed folders; temporary PDFs are cleaned.

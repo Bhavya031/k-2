@@ -25,6 +25,7 @@ class SyntheticFiles implements IntakeFileSystem {
     this.files.delete(from);
     this.files.set(to, contents);
   }
+  async remove(path: string): Promise<void> { this.files.delete(path); }
   async writeFile(path: string, contents: string): Promise<void> { this.files.set(path, contents); }
 }
 
@@ -52,7 +53,7 @@ const folders = Object.freeze({ intake: "synthetic/intake", processed: "syntheti
 const batchArguments = Object.freeze(["--payment-run-id", "synthetic-draft", "--payment-run-on", "2026-09-06", "--matched-on", "2026-09-06", "--reviewed-at", "2026-09-06T12:00:00.000Z"]);
 const clock = Object.freeze({ now: () => new Date("2026-09-06T12:34:56.000Z") });
 
-describe("polled PDF intake", () => {
+describe("polled document intake", () => {
   test("processes an arrived PDF only after its size is unchanged across two polls and then reports no pending work", async () => {
     const files = new SyntheticFiles();
     const batch = new SyntheticBatch(files);
@@ -113,6 +114,37 @@ describe("polled PDF intake", () => {
     expect(result.processed.map((item) => item.duplicate)).toEqual([false, true]);
     expect(batch.results.size).toBe(1);
     expect(files.names(folders.processed)).toEqual(["first.pdf", "retry.pdf"]);
+  });
+
+  test("normalizes stable JPEG/PNG files through the production-PDF adapter, cleans temporary PDFs, and preserves content-addressed duplicates", async () => {
+    const files = new SyntheticFiles();
+    const batch = new SyntheticBatch(files);
+    const normalized: Array<readonly string[]> = [];
+    files.add("synthetic/intake/camera-one.jpg", "identical synthetic image bytes");
+    files.add("synthetic/intake/camera-two.png", "identical synthetic image bytes");
+    const watcher = createIntakeWatcher(folders, batchArguments, {
+      filesystem: files, clock, runBatch: (args) => batch.run(args),
+      normalizeImage: async (source, temporaryPdf) => {
+        normalized.push([source, temporaryPdf]);
+        files.add(temporaryPdf, `single-page synthetic PDF: ${files.get(source)!}`);
+      },
+    });
+
+    await watcher.poll();
+    const result = await watcher.poll();
+
+    expect(normalized).toEqual([
+      ["synthetic/intake/camera-one.jpg", "synthetic/intake/.k2-intake-watch/camera-one.0.pdf"],
+      ["synthetic/intake/camera-two.png", "synthetic/intake/.k2-intake-watch/camera-two.1.pdf"],
+    ]);
+    expect(batch.paths).toEqual([
+      "synthetic/intake/.k2-intake-watch/camera-one.0.pdf",
+      "synthetic/intake/.k2-intake-watch/camera-two.1.pdf",
+    ]);
+    expect(result.processed.map((item) => item.duplicate)).toEqual([false, true]);
+    expect(batch.results.size).toBe(1);
+    expect(files.names(folders.processed)).toEqual(["camera-one.jpg", "camera-two.png"]);
+    expect(files.names("synthetic/intake/.k2-intake-watch")).toEqual([]);
   });
 
   test("defines the documented defaults and lets one-shot mode truthfully retain an unconfirmed PDF as pending", async () => {

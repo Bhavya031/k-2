@@ -10,7 +10,7 @@ const dateOnly = (column: string): string => `
   AND date(${column}, '+0 days') = ${column}
 `;
 
-const STORE_SCHEMA_VERSION = 4;
+const STORE_SCHEMA_VERSION = 5;
 
 /**
  * Applies the Stage 1 store schema. It is safe to invoke at every startup.
@@ -206,9 +206,35 @@ export function migrateStore(database: Database): void {
         tds_paise INTEGER NOT NULL CHECK (typeof(tds_paise) = 'integer' AND tds_paise >= 0),
         retention_paise INTEGER NOT NULL CHECK (typeof(retention_paise) = 'integer' AND retention_paise >= 0),
         net_paise INTEGER NOT NULL CHECK (typeof(net_paise) = 'integer'),
+        beneficiary_account_number TEXT,
+        beneficiary_ifsc TEXT,
         status TEXT NOT NULL CHECK (status IN ('draft', 'approved', 'held', 'executed_simulated', 'voided')),
         CHECK (net_paise = gross_paise - tds_paise - retention_paise)
       ) STRICT;
+
+      CREATE TABLE IF NOT EXISTS vendor_payment_methods (
+        id TEXT PRIMARY KEY,
+        vendor_id TEXT NOT NULL REFERENCES vendors(id),
+        beneficiary_name TEXT NOT NULL CHECK (length(trim(beneficiary_name)) > 0),
+        account_number TEXT NOT NULL CHECK (length(trim(account_number)) > 0),
+        ifsc TEXT NOT NULL CHECK (
+          length(trim(ifsc)) > 0 AND length(ifsc) = 11
+          AND ifsc GLOB '[A-Za-z][A-Za-z][A-Za-z][A-Za-z]0[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]'
+        ),
+        status TEXT NOT NULL CHECK (status IN ('active', 'revoked')),
+        verified_by TEXT NOT NULL CHECK (length(trim(verified_by)) > 0),
+        verified_at TEXT NOT NULL CHECK (
+          length(verified_at) = 24
+          AND verified_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'
+          AND strftime('%Y-%m-%dT%H:%M:%fZ', verified_at) = verified_at
+        ),
+        razorpayx_fund_account_id TEXT
+      ) STRICT;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS vendor_payment_methods_vendor_account_ifsc
+        ON vendor_payment_methods (vendor_id, account_number, ifsc);
+      CREATE UNIQUE INDEX IF NOT EXISTS vendor_payment_methods_one_active_vendor
+        ON vendor_payment_methods (vendor_id) WHERE status = 'active';
 
     `);
     // Piece A rebuilds its Stage 6 placeholder before Piece B extends terms/runs.
@@ -225,6 +251,9 @@ export function migrateStore(database: Database): void {
     const paymentRunColumns = columns("payment_runs");
     if (!paymentRunColumns.has("reference")) database.exec("ALTER TABLE payment_runs ADD COLUMN reference TEXT");
     if (!paymentRunColumns.has("notes")) database.exec("ALTER TABLE payment_runs ADD COLUMN notes TEXT");
+    const paymentRunLineColumns = columns("payment_run_lines");
+    if (!paymentRunLineColumns.has("beneficiary_account_number")) database.exec("ALTER TABLE payment_run_lines ADD COLUMN beneficiary_account_number TEXT");
+    if (!paymentRunLineColumns.has("beneficiary_ifsc")) database.exec("ALTER TABLE payment_run_lines ADD COLUMN beneficiary_ifsc TEXT");
     const sourceDocumentColumns = columns("source_documents");
     if (!sourceDocumentColumns.has("ingest_source_sha256")) database.exec("ALTER TABLE source_documents ADD COLUMN ingest_source_sha256 TEXT");
     if (!sourceDocumentColumns.has("ingest_first_page")) database.exec("ALTER TABLE source_documents ADD COLUMN ingest_first_page INTEGER CHECK (ingest_first_page IS NULL OR (typeof(ingest_first_page) = 'integer' AND ingest_first_page > 0))");

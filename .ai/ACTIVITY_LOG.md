@@ -300,3 +300,11 @@ The repository carries the memory, not the chat.
 - `bun run test`: 163 pass, 0 fail, 552 `expect()` calls across 22 files; `bun run typecheck` and `git diff --check` passed.
 - mutation check: replaced the required Gmail client-secret validation with an empty fallback; `requires every Gmail intake credential once any Gmail intake key is configured` failed, expecting `GMAIL_CLIENT_SECRET` but receiving the later missing-key error. Restored exactly.
 
+## 2026-09-06 — /root — START RAZORPAYX-PAYOUT-ADAPTER-SECURITY
+- Claiming Stage 7 payment-run security follow-up: human-terminal-only verified vendor payment methods and a pure simulated RazorpayX request builder.
+
+## 2026-09-06 — /root — FINISH RAZORPAYX-PAYOUT-ADAPTER-SECURITY
+- Added the STRICT `vendor_payment_methods` migration, human-TTY-only verifier, frozen pure simulated RazorpayX request builder, and optional validated company-account configuration. The builder only reads active verified methods and never falls back to `vendor_terms`; no payout is sent.
+- `bun run test`: 166 pass, 0 fail, 593 `expect()` calls across 22 files; `bun run typecheck` and `git diff --check` passed.
+- Required mutations: deleting the account comparison failed `refuses an instruction when even one account-number digit differs from the verified method` with expected refusal vs received `[]`; deleting the IFSC comparison failed `refuses an instruction when its IFSC differs from the verified method` with expected refusal vs received `[]`; adding `Date.now()` to idempotency failed `uses content-derived idempotency: stable for identical content and different at one paise` (same-content key mismatch). Each was restored exactly.
+

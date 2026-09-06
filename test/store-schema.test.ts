@@ -48,6 +48,7 @@ describe("Stage 1 SQLite store schema", () => {
       "review_values",
       "schema_migrations",
       "source_documents",
+      "vendor_payment_methods",
       "vendor_terms",
       "vendors",
     ]);

@@ -120,3 +120,8 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 16:30 IST — /root — START STAGE-4-EXTRACT-B
 - Building only typed per-document field extraction and deterministic per-page rollup with synthetic fixtures; segmentation is out of scope.
+
+## 2026-09-06 16:35 IST — /root — FINISH STAGE-4-EXTRACT-B
+- implementation commit fd62c0abec7d7b0af95b8c5644283f1a078ad825; typed synthetic per-document extraction, integer boundary conversion, and deterministic conflict-preserving rollup landed.
+- `bun test`: 48 pass, 0 fail, 150 expect() calls across 7 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changed `distinct.size > 1` to `distinct.size > 2`; `rolls extracted pages without a further model call and preserves conflicting values with a disagreement marker` failed with `Expected: true` / `Received: undefined`; restored exactly and reran green.

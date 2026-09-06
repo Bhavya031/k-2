@@ -7,7 +7,8 @@
   },
   "scripts": {
     "typecheck": "bun x --package typescript@5.9.2 tsc --noEmit",
-    "test": "bun run scripts/test.ts"
+    "test": "bun run scripts/test.ts",
+    "report": "bun run scripts/generate-report.ts"
   },
   "packageManager": "bun@1.4.2",
   "devDependencies": {

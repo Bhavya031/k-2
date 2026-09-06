@@ -180,3 +180,11 @@ The repository carries the memory, not the chat.
 - 2026-09-06 — Stage 7 Piece B (payment runs) FINISH — 81 pass, 0 fail, 265 expect() calls across 13 files; typecheck clean; threshold mutation failed as expected.
 - 2026-09-06 — Stage 7 Piece B review update — 82 pass, 0 fail, 267 expect() calls across 13 files; vendor aggregate mutation failed as expected and was restored.
 - 2026-09-06 — Stage 7 Piece B rebased after Piece A; 93 pass, 0 fail, 286 expect() calls across 14 files; typecheck clean.
+
+## 2026-09-06 — /root — START STAGE-8
+- Building the deterministic, self-contained offline report page from persisted synthetic/simulated store records.
+
+## 2026-09-06 — /root — FINISH STAGE-8
+- implementation commit 1addcc544080e0950c7f956560b3cf81e8a3f33f; self-contained offline report command, persisted-store report data, exact-first search, and document page metadata landed.
+- `bun test`: 99 pass, 0 fail, 313 expect() calls across 15 files; `bun run typecheck` and `git diff --check`: passed.
+- mutation check: changed unbilled `WHERE m.id IS NULL` to `WHERE m.id IS NOT NULL`; `renders one unbilled, variance, and payment line in their sections using exact paise displays` failed with expected `PASS-77` / received `MATCHED-88`; restored byte-for-byte and reran green.

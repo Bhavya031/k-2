@@ -218,3 +218,11 @@ The repository carries the memory, not the chat.
 - Separate localhost-only read surface committed with closed structured planner, typed-store answers/citations, and CSV files from rows; Stage 8 remains untouched.
 - `bun test`: 113 pass, 0 fail, 373 `expect()` calls across 18 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: permitted a model `wording` field on the pass plan; `retries only the malformed plan and cannot render a fabricated model number` failed exactly with `Expected: 2` / `Received: 1` (and schema test failed). Restored exactly and reran green.
+
+## 2026-09-06 — /root — START EXCEPTION-REVIEW-FOLLOW-UP
+- Adding the accountant-only exception review path to the localhost ledger surface using the existing atomic ReviewQueue APIs.
+
+## 2026-09-06 — /root — FINISH EXCEPTION-REVIEW-FOLLOW-UP
+- Added a polished localhost accountant exception queue, source-page routes, and the existing atomic ReviewQueue claim/decision path as the surface’s only write path; no payment/model/ledger writes.
+- `bun test`: 116 pass, 0 fail, 384 `expect()` calls across 18 files; `bun run typecheck` and `git diff --check`: passed.
+- mutation check: removed the ledger safe-integer predicate; `rejects an unsafe integer query result before it can be rendered` failed exactly with expected `amount must be a safe integer`, received `amountPaise must be a safe integer`; restored exactly and reran green.

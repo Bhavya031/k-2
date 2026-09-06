@@ -5,7 +5,7 @@ import { Database } from "bun:sqlite";
 import { deductionPaise } from "../src/payments/runs.ts";
 import { ReviewQueue } from "../src/review/queue.ts";
 
-const REQUIRED_SCHEMA_VERSION = 4;
+const REQUIRED_SCHEMA_VERSION = 5;
 const ACCRUAL_COUNT = 36;
 const VENDORS = [
   "SYNTHETIC AURORA AGGREGATES", "SIMULATED COBALT QUARRY", "SYNTHETIC JUNIPER STONEWORKS",

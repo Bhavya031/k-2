@@ -44,7 +44,7 @@ describe("synthetic/simulated demo-data seeder", () => {
       expect(rows.filter(({ status }) => status === "settled")).toHaveLength(4);
       expect(database.query("SELECT count(*) AS count FROM review_items WHERE state IN ('pending', 'claimed')").get()).toEqual({ count: 4 });
       expect(database.query("SELECT count(*) AS count FROM review_items WHERE state = 'decided'").get()).toEqual({ count: 3 });
-      expect(database.query("SELECT count(*) AS count FROM sqlite_master WHERE type = 'table' AND name = 'vendor_payment_methods'").get()).toEqual({ count: 0 });
+      expect(database.query("SELECT count(*) AS count FROM vendor_payment_methods").get()).toEqual({ count: 0 });
     } finally { database.close(); }
   });
 

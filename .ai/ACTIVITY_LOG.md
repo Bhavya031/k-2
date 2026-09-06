@@ -150,3 +150,8 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 17:30 IST — /root — START STAGE-5-INTEGRATION
 - Wiring the merged phone decision port to the existing local review queue and adding a real end-to-end synthetic test.
+
+## 2026-09-06 17:45 IST — /root — FINISH STAGE-5-INTEGRATION
+- implementation commit 59734e594d8ac915fcd273c79df33314914f92be; queue-to-phone adapter and a real synthetic photo-to-audited-correction integration test landed.
+- `bun test`: 68 pass, 0 fail, 203 expect() calls across 11 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changed phone integer correction parsing to store zero; `a synthetic photo reaches a queued item, records a phone correction audit, and retains the human value` failed with `expect(received).toEqual(expected)` (expected 12400, received 0); restored exactly and reran green.

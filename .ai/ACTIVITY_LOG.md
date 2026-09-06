@@ -276,3 +276,11 @@ The repository carries the memory, not the chat.
 - Added `printedDateToIso`: exact Indian day-first and ISO date conversion with Date round-trip validation; trailing printed times are ignored. The batch pipeline normalizes both delivery and supplier-invoice dates before ISO-only ledger/matching writes.
 - `bun test --timeout 30000`: 152 pass, 0 fail, 482 `expect()` calls across 21 files; `bun x --package typescript@5.9.2 tsc --noEmit` and `git diff --check`: passed.
 - mutation check: swapped the day and month positions in the printed-date ISO construction. Named test `chooses the day-first reading for an ambiguous printed date` failed exactly: expected `"2026-06-05"`, received `"2026-05-06"`. Restored byte-for-byte and reran green.
+## 2026-09-06 — /root — START LEDGER-DOCUMENT-SURFACE
+- Building read-only document discovery and scanned-paper evidence on the loopback ledger surface.
+
+## 2026-09-06 — /root — FINISH LEDGER-DOCUMENT-SURFACE
+- Added loopback-only document list/detail APIs, range-bounded scanned-page coverage, and a lazy-loaded paper gallery/viewer with page controls, document evidence, review indicators, and ask-result document thumbnails. The UI remains read-only except for existing review decisions.
+- Read the supplied real database only: 1 source document, 3 pages, and one GANESH STONE QUARRY accrual for 1,292,160 paise on 2026-07-18; no raw paper or database content was copied.
+- `bun test --timeout 30000`: 139 pass, 0 fail, 473 `expect()` calls across 21 files; `bun x --package typescript@5.9.2 tsc --noEmit` and `git diff --check`: passed.
+- mutation check: removed `amount_paise AS amountPaise` from `GET /api/documents`; named test `lists document accruals and unresolved documents, then returns document pages and open reviews` failed with the missing `amountPaise: 155250` diff. Restored byte-for-byte and reran green.

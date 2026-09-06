@@ -110,3 +110,8 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 16:00 IST — /root — START STAGE-3
 - Building only multi-page tender-PDF ingestion, bounded rendering/classification, content-addressed persistence, and unreadable-page handling.
+
+## 2026-09-06 16:15 IST — /root — FINISH STAGE-3
+- implementation commit 556d72d63f850db24cfafc199cbeb5c2b1a28609; content-addressed original tender PDF storage, bounded Poppler page rendering and Stage 2 boundary classification, page rows, and explicit unreadable results landed.
+- `bun test`: 44 pass, 0 fail, 128 expect() calls across 6 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changed the existing-document condition from `exists !== null` to `exists === null`; all 4 Stage 3 tests failed with `TypeError: null is not an object (evaluating '...page_count')`; restored exactly and reran the whole suite green.

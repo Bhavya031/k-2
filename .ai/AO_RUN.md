@@ -43,7 +43,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 | 1 | Foundation | MERGED | PRs #3, #2, #4, #1 | 28e5e23, 1e12ef4, 17e2a27, d2551fc | 32 pass, 0 fail; 79 expect() calls / 4 files; typecheck clean |
 | 2 | Model boundary | MERGED | PR #5 | a95f930 | 40 pass, 0 fail; 111 expect() calls / 5 files; typecheck clean |
 | 3 | Ingest and classify | MERGED | PR #6 | f42cd26 | 44 pass, 0 fail; 128 expect() calls / 6 files; typecheck clean |
-| 4 | Segment and extract | TODO | | | |
+| 4 | Segment and extract | REVIEW | ao/k-2-15/segmentation | pending | 50 pass, 0 fail; 140 expect() calls / 7 files; typecheck clean |
 | 5 | Review queue and intake | TODO | | | |
 | 6 | Ledger and accruals | TODO | | | |
 | 7 | Match and payment run | TODO | | | |

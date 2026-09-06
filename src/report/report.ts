@@ -44,6 +44,7 @@ export function searchExactFirst(index: readonly SearchEntry[], query: string): 
 }
 
 function rows<T>(database: Database, sql: string): T[] { return database.query(sql).all() as T[]; }
+function hasTable(database: Database, name: string): boolean { return database.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(name) !== null; }
 
 function reportData(database: Database): ReportData {
   const unbilled = rows<Unbilled>(database, `
@@ -78,13 +79,15 @@ function reportData(database: Database): ReportData {
   for (const { runId, ...line } of lineRows) groupedLines.set(runId, [...(groupedLines.get(runId) ?? []), line]);
   const paymentRuns = rows<Omit<PaymentRun, "lines">>(database, `SELECT id, run_on AS runOn, reference, status FROM payment_runs ORDER BY run_on ASC, id ASC`)
     .map((run) => ({ ...run, lines: groupedLines.get(run.id) ?? [] }));
-  const documents = rows<Document>(database, `
-    SELECT d.id, COALESCE(v.name, 'Unassigned vendor') AS vendor,
-      COALESCE((SELECT group_concat(document_type, ', ') FROM (SELECT DISTINCT p2.document_type FROM document_pages p2 WHERE p2.document_id = d.id ORDER BY p2.document_type)), 'unresolved') AS type,
-      count(p.id) AS pageCount, min(p.extraction_confidence_basis_points) AS confidenceBasisPoints
-    FROM source_documents d LEFT JOIN vendors v ON v.id = d.vendor_id LEFT JOIN document_pages p ON p.document_id = d.id
-    GROUP BY d.id, v.name ORDER BY d.id ASC
-  `).map((row) => ({ ...row, pageCount: integer(row.pageCount, "pageCount"), confidenceBasisPoints: row.confidenceBasisPoints === null ? null : integer(row.confidenceBasisPoints, "confidenceBasisPoints") }));
+  const documents = hasTable(database, "ingest_documents") && hasTable(database, "ingest_pages")
+    ? rows<Document>(database, `
+      SELECT d.source_sha256 AS id, 'Unassigned vendor' AS vendor,
+        COALESCE((SELECT group_concat(document_type, ', ') FROM (SELECT DISTINCT p2.document_type FROM ingest_pages p2 WHERE p2.document_sha256 = d.source_sha256 ORDER BY p2.document_type)), 'unresolved') AS type,
+        d.page_count AS pageCount, min(p.confidence_basis_points) AS confidenceBasisPoints
+      FROM ingest_documents d LEFT JOIN ingest_pages p ON p.document_sha256 = d.source_sha256
+      GROUP BY d.source_sha256, d.page_count ORDER BY d.source_sha256 ASC
+    `).map((row) => ({ ...row, pageCount: integer(row.pageCount, "pageCount"), confidenceBasisPoints: row.confidenceBasisPoints === null ? null : integer(row.confidenceBasisPoints, "confidenceBasisPoints") }))
+    : [];
   const index: SearchEntry[] = [];
   const add = (value: string, label: string, section: string): void => { if (value.trim().length > 0) index.push({ value, label, section }); };
   for (const entry of unbilled) { add(entry.paperReference, `Paper reference: ${entry.paperReference}`, "Unbilled"); add(entry.vendor, `Vendor: ${entry.vendor}`, "Unbilled"); add(String(entry.amountPaise), `Amount: ${inr(entry.amountPaise)}`, "Unbilled"); add(inr(entry.amountPaise), `Amount: ${inr(entry.amountPaise)}`, "Unbilled"); }

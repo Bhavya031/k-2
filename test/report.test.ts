@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "bun:test";
 
+import { migrateIngestStore } from "../src/ingest/ingest.ts";
 import { buildReport, inr, searchExactFirst, type SearchEntry } from "../src/report/report.ts";
 import { migrateStore } from "../src/store/schema.ts";
 
@@ -14,8 +15,13 @@ afterEach(() => { while (databases.length > 0) databases.pop()?.close(); });
 function reportFixture(database: Database): void {
   database.run("INSERT INTO vendors (id, name, status) VALUES ('vendor-a', 'Synthetic Ganesh Quarry', 'active')");
   for (const id of ["delivery-old", "delivery-matched", "invoice-variance"]) database.run("INSERT INTO source_documents (id, vendor_id, document_status) VALUES (?, 'vendor-a', 'classified')", [id]);
-  database.run("INSERT INTO source_documents (id, document_status) VALUES ('synthetic-pass-77', 'classified')");
-  database.run("INSERT INTO document_pages (id, document_id, page_number, document_type, extraction_confidence_basis_points) VALUES ('page-1', 'synthetic-pass-77', 1, 'royalty_pass', 9800)");
+  migrateIngestStore(database);
+  database.run("INSERT INTO ingest_assets (sha256, asset_type, media_type, bytes) VALUES ('synthetic-stage3-document', 'original_pdf', 'application/pdf', ?)", [new Uint8Array([1])]);
+  database.run("INSERT INTO ingest_assets (sha256, asset_type, media_type, bytes) VALUES ('synthetic-stage3-page-1', 'rendered_page', 'image/png', ?)", [new Uint8Array([2])]);
+  database.run("INSERT INTO ingest_assets (sha256, asset_type, media_type, bytes) VALUES ('synthetic-stage3-page-2', 'rendered_page', 'image/png', ?)", [new Uint8Array([3])]);
+  database.run("INSERT INTO ingest_documents (source_sha256, original_filename, page_count) VALUES ('synthetic-stage3-document', 'synthetic.pdf', 2)");
+  database.run("INSERT INTO ingest_pages (document_sha256, page_number, image_sha256, classification_status, document_type, confidence_basis_points, summary, labels_json) VALUES ('synthetic-stage3-document', 1, 'synthetic-stage3-page-1', 'classified', 'royalty_pass', 9800, 'Synthetic page one.', '[]')");
+  database.run("INSERT INTO ingest_pages (document_sha256, page_number, image_sha256, classification_status, document_type, confidence_basis_points, summary, labels_json) VALUES ('synthetic-stage3-document', 2, 'synthetic-stage3-page-2', 'classified', 'royalty_pass', 9400, 'Synthetic page two.', '[]')");
   database.run(`INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points)
     VALUES ('unbilled-old', 'delivery-old', 'vendor-a', 'PASS-77', 155250, 12420, 'tonne', '2026-09-01', 'incurred', 9800)`);
   database.run(`INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points)
@@ -55,15 +61,21 @@ describe("Stage 8 offline report", () => {
     expect(report.indexOf("2. Exceptions")).toBeLessThan(report.indexOf("3. Payments"));
   });
 
-  test("builds exact-first paper-reference and vendor-name search entries at generation time", () => {
+  test("uses exact-first search when a pass reference also has a prefix match", () => {
+    const exact: SearchEntry = { value: "PASS-77", label: "Paper reference: PASS-77", section: "Unbilled" };
+    const suffix: SearchEntry = { value: "PASS-77-SUFFIX", label: "Paper reference: PASS-77-SUFFIX", section: "Unbilled" };
+    const index: SearchEntry[] = [exact, suffix, { value: "Synthetic Ganesh Quarry", label: "Vendor: Synthetic Ganesh Quarry", section: "Unbilled" }];
+    expect(searchExactFirst(index, "PASS-77")).toEqual([exact]);
+    expect(searchExactFirst(index, "Synthetic Ganesh Quarry")).toEqual([index[2]!]);
+    expect(searchExactFirst(index, "pass")).toEqual([exact, suffix]);
+  });
+
+  test("resolves documents from Stage 3 ingest persistence, including type, page count, and confidence", () => {
     const database = store(); reportFixture(database);
     const report = buildReport(database);
     const payload = /const data=(.*?);const inr=/.exec(report)?.[1];
-    expect(payload).toBeDefined();
-    const index = (JSON.parse(payload!) as { searchIndex: SearchEntry[] }).searchIndex;
-    expect(searchExactFirst(index, "PASS-77")).toEqual(expect.arrayContaining([expect.objectContaining({ section: "Unbilled", value: "PASS-77" })]));
-    expect(searchExactFirst(index, "Synthetic Ganesh Quarry")).toEqual(expect.arrayContaining([expect.objectContaining({ label: "Vendor: Synthetic Ganesh Quarry" })]));
-    expect(searchExactFirst(index, "pass").every((entry) => entry.value.toLocaleLowerCase("en-IN").startsWith("pass"))).toBe(true);
+    const documents = (JSON.parse(payload!) as { documents: unknown[] }).documents;
+    expect(documents).toContainEqual({ id: "synthetic-stage3-document", vendor: "Unassigned vendor", type: "royalty_pass", pageCount: 2, confidenceBasisPoints: 9400 });
   });
 
   test("one report command reads a persisted store and writes a self-contained file", async () => {

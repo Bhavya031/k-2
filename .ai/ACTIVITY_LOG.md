@@ -21,6 +21,18 @@ Format:
 
 The repository carries the memory, not the chat.
 
+## 2026-09-06 14:13 IST — /root — START STAGE-1-STORE
+- Building only the Stage 1 SQLite STRICT schema, idempotent migration, and isolated Bun schema tests.
+
+## 2026-09-06 14:16 IST — /root — FINISH STAGE-1-STORE
+- implementation commit 1e344c605a5fe5caf7d3ac95b39490a530e82c21; STRICT SQLite store migration and isolated Bun schema tests landed.
+- `bun test`: 6 pass, 0 fail, 16 expect() calls across 1 file; `bun build --no-bundle`: passed (transpilation check; no project typecheck tooling exists); `git diff --check`: passed.
+- mutation check: removed the non-negative quantity condition; `quantities reject negative values` failed with `Expected substring: "CHECK constraint failed"` and `Received function did not throw`; restored exactly and reran green.
+
+## 2026-09-06 14:20 IST — /root — BLOCKED STAGE-1-STORE
+- Reopened after whole-tree verification request: `git fetch origin` completed, but origin/main plus this branch has no `package.json`, so a package typecheck command is unavailable. Per instruction, this sub-piece is BLOCKED pending integration with the project skeleton.
+- `bun test`: 6 pass, 0 fail, 16 expect() calls across 1 file; `git diff --check`: passed. Repeated mutation check removed the non-negative quantity condition; `quantities reject negative values` failed with `Expected substring: "CHECK constraint failed"` and `Received function did not throw`; restored exactly.
+
 ## 2026-09-06 08:44 IST — root/ao — START TASK-002
 - Stage 1 core dependency-free value types: validated integer units, provenance-backed facts, and explicit bulk outcomes.
 

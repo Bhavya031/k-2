@@ -28,3 +28,6 @@ The repository carries the memory, not the chat.
 - implementation commit fce377f3e2276b0720cd3ef8df7b4859eda7c43b; Bun project skeleton, strict ES-module settings, environment example, and empty-suite guard landed.
 - `bun test`: 3 pass, 0 fail, 4 expect() calls across 1 file; `bun run typecheck` passed; prompt check not applicable; `git diff --check` passed.
 - mutation check: changing the node_modules exclusion to `if (true)` made `fails when only node_modules contains a test file` fail with `Received function did not throw`; reverted exactly and reran green.
+
+## 2026-09-06 08:51 IST — root/Codex — START TASK-001
+- Repairing the project typecheck command and adding an automated semantic type-error proof.

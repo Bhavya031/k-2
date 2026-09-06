@@ -6,7 +6,7 @@
     "bun": "1.4.2"
   },
   "scripts": {
-    "typecheck": "bun build --target=bun --no-bundle --outdir=/tmp/k-2-typecheck $(find src scripts test -type f -name '*.ts')",
+    "typecheck": "bun x --package typescript@5.9.2 tsc --noEmit",
     "test": "bun run scripts/test.ts"
   },
   "packageManager": "bun@1.4.2"

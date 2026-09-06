@@ -3,6 +3,7 @@ import {
   mkdtempSync,
   mkdirSync,
   rmSync,
+  unlinkSync,
   writeFileSync
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -80,4 +81,31 @@ test("test command fails for an empty project", () => {
   expect(new TextDecoder().decode(result.stderr)).toContain(
     "No project test files found outside ignored directories."
   );
+});
+
+
+test("typecheck command rejects a semantic TypeScript error", () => {
+  const invalidSource = join(
+    repositoryRoot,
+    "src",
+    "tooling",
+    "typecheck-proof.invalid.ts"
+  );
+  writeFileSync(invalidSource, 'const bad: number = "not a number";\n');
+
+  try {
+    const result = Bun.spawnSync({
+      cmd: [process.execPath, "run", "typecheck"],
+      cwd: repositoryRoot,
+      stderr: "pipe",
+      stdout: "pipe"
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect(new TextDecoder().decode(result.stdout)).toContain(
+      "Type 'string' is not assignable to type 'number'."
+    );
+  } finally {
+    unlinkSync(invalidSource);
+  }
 });

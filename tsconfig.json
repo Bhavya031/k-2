@@ -5,7 +5,12 @@
     "moduleResolution": "bundler",
     "target": "ESNext",
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "types/**/*.d.ts"
+  ]
 }

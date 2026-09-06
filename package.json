@@ -8,7 +8,11 @@
   "scripts": {
     "typecheck": "bun x --package typescript@5.9.2 tsc --noEmit",
     "test": "bun run scripts/test.ts",
+<<<<<<< HEAD
     "report": "bun run scripts/generate-report.ts"
+=======
+    "batch": "bun src/pipeline/cli.ts"
+>>>>>>> 127c2fa (feat(pipeline): compose persisted batch processing)
   },
   "packageManager": "bun@1.4.2",
   "devDependencies": {

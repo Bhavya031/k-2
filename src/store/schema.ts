@@ -10,7 +10,7 @@ const dateOnly = (column: string): string => `
   AND date(${column}, '+0 days') = ${column}
 `;
 
-const STORE_SCHEMA_VERSION = 3;
+const STORE_SCHEMA_VERSION = 4;
 
 /**
  * Applies the Stage 1 store schema. It is safe to invoke at every startup.
@@ -47,6 +47,12 @@ export function migrateStore(database: Database): void {
       CREATE TABLE IF NOT EXISTS source_documents (
         id TEXT PRIMARY KEY,
         vendor_id TEXT REFERENCES vendors(id),
+        -- The Stage 3 original-PDF content hash and inclusive page range that
+        -- created this ledger/report document.  They are nullable only for
+        -- records created before the post-stage composition migration.
+        ingest_source_sha256 TEXT,
+        ingest_first_page INTEGER CHECK (ingest_first_page IS NULL OR (typeof(ingest_first_page) = 'integer' AND ingest_first_page > 0)),
+        ingest_last_page INTEGER CHECK (ingest_last_page IS NULL OR (typeof(ingest_last_page) = 'integer' AND ingest_last_page >= ingest_first_page)),
         document_status TEXT NOT NULL CHECK (
           document_status IN ('received', 'classified', 'needs_review', 'rejected')
         ),
@@ -204,8 +210,6 @@ export function migrateStore(database: Database): void {
         CHECK (net_paise = gross_paise - tds_paise - retention_paise)
       ) STRICT;
 
-      INSERT OR IGNORE INTO schema_migrations (version, applied_on)
-      VALUES (${STORE_SCHEMA_VERSION}, '2026-09-06');
     `);
     // Piece A rebuilds its Stage 6 placeholder before Piece B extends terms/runs.
     if (rebuildMatches) database.exec("DROP TABLE accrual_matches_stage6;");
@@ -221,5 +225,13 @@ export function migrateStore(database: Database): void {
     const paymentRunColumns = columns("payment_runs");
     if (!paymentRunColumns.has("reference")) database.exec("ALTER TABLE payment_runs ADD COLUMN reference TEXT");
     if (!paymentRunColumns.has("notes")) database.exec("ALTER TABLE payment_runs ADD COLUMN notes TEXT");
+    const sourceDocumentColumns = columns("source_documents");
+    if (!sourceDocumentColumns.has("ingest_source_sha256")) database.exec("ALTER TABLE source_documents ADD COLUMN ingest_source_sha256 TEXT");
+    if (!sourceDocumentColumns.has("ingest_first_page")) database.exec("ALTER TABLE source_documents ADD COLUMN ingest_first_page INTEGER CHECK (ingest_first_page IS NULL OR (typeof(ingest_first_page) = 'integer' AND ingest_first_page > 0))");
+    if (!sourceDocumentColumns.has("ingest_last_page")) database.exec("ALTER TABLE source_documents ADD COLUMN ingest_last_page INTEGER CHECK (ingest_last_page IS NULL OR (typeof(ingest_last_page) = 'integer' AND ingest_last_page >= ingest_first_page))");
+    database.exec(`CREATE UNIQUE INDEX IF NOT EXISTS source_documents_ingest_range
+      ON source_documents (ingest_source_sha256, ingest_first_page, ingest_last_page)
+      WHERE ingest_source_sha256 IS NOT NULL`);
+    database.run("INSERT OR IGNORE INTO schema_migrations (version, applied_on) VALUES (?, '2026-09-06')", [STORE_SCHEMA_VERSION]);
   })();
 }

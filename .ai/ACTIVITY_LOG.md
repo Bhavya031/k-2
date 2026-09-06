@@ -157,3 +157,11 @@ The repository carries the memory, not the chat.
 - mutation check: changed phone integer correction parsing to store zero; `a synthetic photo reaches a queued item, records a phone correction audit, and retains the human value` failed with `expect(received).toEqual(expected)` (expected 12400, received 0); restored exactly and reran green.
 
 - 2026-09-06 — Stage 5 merged: PR #10 queue, PR #9 intake, and PR #11 integration (d2e2f49); final `bun test` 68 pass, 0 fail, 203 `expect()` calls across 11 files; `bun run typecheck` passed. Stage 6 is next.
+
+## 2026-09-06 — /root — START STAGE-6
+- Implementing ledger and accruals with synthetic fixtures, deterministic integer-only pricing, and the established review queue.
+
+## 2026-09-06 — /root — FINISH STAGE-6
+- Added strict vendor terms, accruals, future-facing matches/payment runs and lines, plus deterministic integer-only delivery accruals integrated with the existing review queue. All test records are synthetic/simulated.
+- `bun test`: 76 pass, 0 fail, 238 expect() calls across 12 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changed the pricing divisor from `1000n` to `1n`; three tests failed, including `books a synthetic known-vendor delivery on its incurred date using only the agreed-rate formula` with expected `amountPaise: 155250`, received `155250000`; restored exactly and reran green.

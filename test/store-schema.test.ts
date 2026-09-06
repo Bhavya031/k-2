@@ -37,13 +37,18 @@ describe("Stage 1 SQLite store schema", () => {
       .query("SELECT name, sql FROM sqlite_master WHERE type = 'table' ORDER BY name")
       .all() as Array<{ name: string; sql: string }>;
     expect(tables.map(({ name }) => name)).toEqual([
+      "accrual_matches",
+      "accruals",
       "document_pages",
       "ledger_lines",
+      "payment_run_lines",
+      "payment_runs",
       "review_decision_audit",
       "review_items",
       "review_values",
       "schema_migrations",
       "source_documents",
+      "vendor_terms",
       "vendors",
     ]);
     for (const { sql } of tables) expect(sql).toContain("STRICT");

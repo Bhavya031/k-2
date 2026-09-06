@@ -45,7 +45,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 | 3 | Ingest and classify | MERGED | PR #6 | f42cd26 | 44 pass, 0 fail; 128 expect() calls / 6 files; typecheck clean |
 | 4 | Segment and extract | MERGED | PRs #7, #8 | 912fd71, 246b875 | 54 pass, 0 fail; 162 expect() calls / 8 files; typecheck clean |
 | 5 | Review queue and intake | MERGED | PRs #10, #9, #11 | d2e2f49 | 68 pass, 0 fail; 203 expect() calls / 11 files; typecheck clean |
-| 6 | Ledger and accruals | TODO | | | |
+| 6 | Ledger and accruals | REVIEW | ao/k-2-20/root | pending | 76 pass, 0 fail; 238 expect() calls / 12 files; typecheck clean |
 | 7 | Match and payment run | TODO | | | |
 | 8 | The report page | TODO | | | |
 

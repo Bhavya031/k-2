@@ -29,10 +29,27 @@ over.
 
 ## The safety boundary
 
-K-2 is **payment preparation only**. It prepares information and files. It does
-not move money, connect to a bank, execute a bank upload, or contact a
-government portal. A person, outside this product, decides whether to send any
-bank file. Bank execution is not product code.
+K-2 pays only what a human has approved, to a payee a human has verified.
+
+The pipeline prepares a payout request. It cannot invent a payee, cannot release
+a held line, and cannot approve its own work. A person presses approve, and only
+then does money move — through RazorpayX, over IMPS.
+
+Every safeguard below is enforced by the schema, a TTY check and the filesystem,
+not by a policy document:
+
+- **Payee creation is human-only.** `vendor_payment_methods` is written by one
+  script that refuses to run unless stdin is an interactive terminal and makes
+  the operator retype the full account number. No pipeline, batch command, model
+  or agent can add a payee.
+- **A payout is built only on an exact match.** The instruction's account number
+  *and* IFSC must equal a human-verified row. Anything else is refused with a
+  named reason.
+- **A line with no verified beneficiary is held**, and approving the run does not
+  release it.
+- **Approving twice cannot pay twice.** The idempotency key is derived from the
+  request content, so a one-paise change is a different key and an identical
+  request is the same one.
 
 Autonomous clearing of variances is deliberately not shipped: a disagreement
 between two pieces of paper is named and held for a human. It never auto-clears.
@@ -124,6 +141,39 @@ The amount is arithmetic the model never saw: `13460 × 96000 ÷ 1000 = 1292160`
 paise, at the vendor's contracted rate. Two genuine disagreements between the
 pass and the challan were caught and routed to the review queue rather than
 guessed at.
+
+---
+
+## The payment rail, proven end to end
+
+The full loop runs in **RazorpayX test mode**: all seven vendors exist as
+contacts with fund accounts, a prepared payout is approved from a phone, and the
+money moves.
+
+A real approval, taken from the Telegram bot, reaching `processed`:
+
+```
+pout_TYtDmp2s6oWEM0   processed   7700000 paise   IMPS   vendor bill
+                                  ₹77,000.00 — GANESH STONE QUARRY
+```
+
+The message the approver actually sees, in the language they speak:
+
+```
+भुगतान रन / Payment run: …
+सकल / Gross: ₹…      टीडीएस / TDS: ₹…
+रिटेंशन / Retention: ₹…    शुद्ध देय / Net payable: ₹…
+होल्ड लाइनें / Held lines: 1
+
+[ मंज़ूर / Approve ]   [ अस्वीकार / Reject ]
+```
+
+Press approve, and the payout appears in RazorpayX with status
+`queued → processing → processed`. Press it twice and nothing happens the second
+time — the idempotency key is the same.
+
+The chain is: scanned paper → accrual → matched invoice → TDS and retention →
+prepared payout → **a human's thumb** → RazorpayX.
 
 ---
 

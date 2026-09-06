@@ -165,3 +165,8 @@ The repository carries the memory, not the chat.
 - Added strict vendor terms, accruals, future-facing matches/payment runs and lines, plus deterministic integer-only delivery accruals integrated with the existing review queue. All test records are synthetic/simulated.
 - `bun test`: 76 pass, 0 fail, 238 expect() calls across 12 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: changed the pricing divisor from `1000n` to `1n`; three tests failed, including `books a synthetic known-vendor delivery on its incurred date using only the agreed-rate formula` with expected `amountPaise: 155250`, received `155250000`; restored exactly and reran green.
+
+## 2026-09-06 — /root — STAGE-6 FOLLOW-UP
+- Added non-whole pricing cases above and below half a paise (12,420 × 12,545 = 155,808.9 and 12,420 × 12,544 = 155,796.48) and recorded the rounding-mode test gotcha.
+- `bun test`: 76 pass, 0 fail, 240 expect() calls across 12 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changed integer floor division to round-half-up by adding `500n` before division; `uses one integer floor division for pricing, including remainders on both sides of half a paise` failed: expected `155808`, received `155809`; restored exactly and reran green.

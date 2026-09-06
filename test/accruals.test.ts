@@ -72,9 +72,13 @@ describe("Stage 6 ledger accruals", () => {
     });
   });
 
-  test("uses one integer floor division for pricing and rejects non-integer inputs", () => {
+  test("uses one integer floor division for pricing, including remainders on both sides of half a paise", () => {
     expect(priceAccrual(1_001, 1)).toBe(1);
     expect(priceAccrual(12_420, 12_500)).toBe(155_250);
+    // 155,808,900 / 1000 = 155,808.9: floor must not round this up.
+    expect(priceAccrual(12_420, 12_545)).toBe(155_808);
+    // 155,796,480 / 1000 = 155,796.48: this also pins integer truncation below half.
+    expect(priceAccrual(12_420, 12_544)).toBe(155_796);
     expect(() => priceAccrual(1.5, 1)).toThrow("quantityThousandths must be a safe integer");
   });
 

@@ -74,8 +74,8 @@ function defaultExecutor(invocation: Invocation): Readonly<{ exitCode: number; s
   return Object.freeze({ exitCode: result.exitCode, stderr: new TextDecoder().decode(result.stderr) });
 }
 
-function safeFilename(label: string): string {
-  return label.replace(/[^a-zA-Z0-9_.-]+/g, "_") || "image";
+export function safeFilename(label: string): string {
+  return (label.replace(/[^a-zA-Z0-9_.-]+/g, "_") || "image").slice(0, 80);
 }
 
 /** Runs exactly one isolated Codex structured-output invocation. */

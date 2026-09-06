@@ -1,3 +1,6 @@
+import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 
 import { loadConfig } from "../src/config.ts";
@@ -7,6 +10,7 @@ import {
   LocalProvider,
   askStructured,
   createConfiguredProvider,
+  runLocalBinary,
   type StructuredProvider,
   type StructuredSchema,
   type ValidationIssue,
@@ -79,6 +83,21 @@ describe("askStructured", () => {
     expect(result.attempts).toHaveLength(1);
     expect(result.attempts[0]).toMatchObject({ kind: "provider_failure", number: 1 });
     expect(result.validationErrors).toEqual([]);
+  });
+});
+
+describe("local model binary", () => {
+  test("includes the local command stderr when the process fails", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "k2-local-model-error-"));
+    const command = join(directory, "synthetic-failing-command");
+    try {
+      await writeFile(command, "#!/bin/sh\necho synthetic-local-diagnostic >&2\nexit 7\n");
+      await chmod(command, 0o755);
+      await expect(runLocalBinary(command, { prompt: "synthetic prompt", images: [], schema: { type: "object" } })).rejects
+        .toThrow("Local model command failed with exit code 7: synthetic-local-diagnostic");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 });
 

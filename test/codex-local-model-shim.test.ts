@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
 
-import { decodeImageBytes, extractJson, runCodexShim, type CodexExecutor } from "../scripts/codex-local-model-shim.ts";
+import { decodeImageBytes, extractJson, runCodexShim, safeFilename, type CodexExecutor } from "../scripts/codex-local-model-shim.ts";
 
 describe("Codex local model shim", () => {
   test.each([
@@ -10,6 +10,10 @@ describe("Codex local model shim", () => {
     ["base64", "CAkK"],
   ])("decodes %s image bytes", (_kind, value) => {
     expect([...decodeImageBytes(value)]).toEqual([8, 9, 10]);
+  });
+
+  test("caps a 250-character image label at an 80-character safe filename", () => {
+    expect(safeFilename("a".repeat(250))).toBe("a".repeat(80));
   });
 
   test("writes images and schema, invokes the required Codex command, extracts JSON, and cleans its temporary directory", () => {

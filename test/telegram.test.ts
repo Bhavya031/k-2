@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   createTelegramMessagingTransport,
+  safeFilename,
   type IntakeFolderWriter,
   type TelegramApi,
   type TelegramUpdateOffsetStore,
@@ -74,6 +75,13 @@ function dependencies() {
 }
 
 describe("Telegram watched-folder messaging transport", () => {
+  test("caps a synthetic 250-character label at 80 characters while retaining its extension", () => {
+    const filename = safeFilename(`${"x".repeat(246)}.pdf`);
+
+    expect(filename).toHaveLength(80);
+    expect(filename).toEndWith(".pdf");
+  });
+
   test("writes the largest allowed photo's synthetic bytes to intake and acknowledges it once", async () => {
     const d = dependencies();
     d.api.updates = [photoUpdate(7)];

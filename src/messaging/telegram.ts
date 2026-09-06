@@ -83,9 +83,13 @@ function senderId(message: Readonly<Record<string, unknown>>): string | undefine
   return typeof id === "string" || typeof id === "number" ? String(id) : undefined;
 }
 
-function safeFilename(filename: string): string {
+/** Produces a portable intake filename no longer than 80 characters. */
+export function safeFilename(filename: string): string {
   const cleaned = basename(filename).replace(/[^A-Za-z0-9._-]/g, "_");
-  return cleaned.length === 0 || cleaned === "." || cleaned === ".." ? "upload" : cleaned;
+  if (cleaned.length === 0 || cleaned === "." || cleaned === "..") return "upload";
+  if (cleaned.length <= 80) return cleaned;
+  const extension = extname(cleaned);
+  return `${cleaned.slice(0, Math.max(1, 80 - extension.length))}${extension}`;
 }
 
 function filenameFor(updateId: number, candidate: string, fallbackExtension: string): string {

@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 
 import { saveVendorTerms } from "../src/ledger/accruals.ts";
 import { runBatchPipeline } from "../src/pipeline/batch.ts";
+import { buildReport } from "../src/report/report.ts";
 import type { PdfRenderer } from "../src/ingest/ingest.ts";
 import type { StructuredProvider } from "../src/model/boundary.ts";
 import { migrateStore } from "../src/store/schema.ts";
@@ -88,6 +89,7 @@ describe("Stage 9 post-stage batch composition", () => {
       JOIN accrual_matches m ON m.accrual_id = a.id JOIN payment_run_lines p ON p.accrual_id = a.id`).all()).toEqual([{ id: `source:${result.ingestion.documentHash}:1:1` }]);
     expect(database.query("SELECT beneficiary_account_number, beneficiary_ifsc, beneficiary_bank_name FROM vendor_terms WHERE vendor_id = 'synthetic-vendor'").get())
       .toEqual({ beneficiary_account_number: "SYNTHETIC-ACCOUNT", beneficiary_ifsc: "SYNB0000123", beneficiary_bank_name: "Synthetic Bank" });
+    expect(buildReport(database)).toContain(`source:${result.ingestion.documentHash}:1:1`);
   });
 
   test("re-running an invented batch recognizes its content and does not duplicate source, ledger, match, or payment rows", async () => {

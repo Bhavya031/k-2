@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 2 complete and awaiting review.
+Last updated: 2026-09-06 — Stage 2 merged; Stage 3 next.
 
 ---
 
@@ -25,9 +25,9 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Stage 2 — Model boundary — awaiting review from `ao/k-2-12/root`.
-**Main:** Stage 1 merged — project skeleton, configuration, value types, and store.
-**Suite on main:** 32 pass, 0 fail, 79 expect() calls across 4 files; typecheck clean.
+**Stage:** Stage 2 merged. Stage 3 — Ingest and classify — next.
+**Main:** Stages 1–2 merged — foundation plus structured model boundary.
+**Suite on main:** 40 pass, 0 fail, 111 expect() calls across 5 files; typecheck clean.
 **Blocking:** nothing.
 
 **Open question the human has not answered:** the agreed rate per tonne for the
@@ -41,7 +41,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
 | 1 | Foundation | MERGED | PRs #3, #2, #4, #1 | 28e5e23, 1e12ef4, 17e2a27, d2551fc | 32 pass, 0 fail; 79 expect() calls / 4 files; typecheck clean |
-| 2 | Model boundary | REVIEW | ao/k-2-12/root | 0110c5c | 40 pass, 0 fail; 111 expect() calls / 5 files; typecheck clean |
+| 2 | Model boundary | MERGED | PR #5 | a95f930 | 40 pass, 0 fail; 111 expect() calls / 5 files; typecheck clean |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |
 | 5 | Review queue and intake | TODO | | | |
@@ -122,3 +122,5 @@ Newest last. One line per stage, written when it merges.
 
 - 2026-09-06 — seeded. Specification, rules, playbook, task board and the three
   public tender notices committed. No product code.
+
+- 2026-09-06 — Stage 2 merged: PR #5 (a95f930); final `bun test` 40 pass, 0 fail, 111 expect() calls across 5 files; `bun run typecheck` passed.

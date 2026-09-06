@@ -155,3 +155,5 @@ The repository carries the memory, not the chat.
 - implementation commit 59734e594d8ac915fcd273c79df33314914f92be; queue-to-phone adapter and a real synthetic photo-to-audited-correction integration test landed.
 - `bun test`: 68 pass, 0 fail, 203 expect() calls across 11 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: changed phone integer correction parsing to store zero; `a synthetic photo reaches a queued item, records a phone correction audit, and retains the human value` failed with `expect(received).toEqual(expected)` (expected 12400, received 0); restored exactly and reran green.
+
+- 2026-09-06 — Stage 5 merged: PR #10 queue, PR #9 intake, and PR #11 integration (d2e2f49); final `bun test` 68 pass, 0 fail, 203 `expect()` calls across 11 files; `bun run typecheck` passed. Stage 6 is next.

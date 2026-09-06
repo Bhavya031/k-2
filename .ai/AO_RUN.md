@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 10 exception-review follow-up is in REVIEW; the original eight-stage board is retained unchanged.
+Last updated: 2026-09-06 — Extraction JSON-schema blocker is in REVIEW on `ao/k-2-29/extraction-schema`; the original eight-stage board is retained unchanged.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Maintenance claim:** Disagreement-preserving extraction resolution — REVIEW on `ao/k-2-25/demo-invoices`; eight-stage table unchanged.
+**Maintenance claim:** Extraction JSON-schema blocker — REVIEW on `ao/k-2-29/extraction-schema`; eight-stage table unchanged.
 **Stage:** Stage 10 exception-review follow-up — REVIEW. The localhost ledger surface now has the existing ReviewQueue as its only bookkeeping write path; the original eight-stage board below is retained unchanged.
 **Parallel claim:** Telegram `MessagingTransport` adapter — REVIEW on `ao/k-2-28/root`; watcher work remains separate.
 **Main:** Stages 1–8 merged — foundation through the offline report page.

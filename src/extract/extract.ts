@@ -17,6 +17,14 @@ import { askStructured, type BoundaryResult, type LabelledImage, type Structured
 export const extractionDocumentTypes = ["royalty_pass", "delivery_challan", "supplier_invoice", "tender_notice"] as const;
 export type ExtractionDocumentType = (typeof extractionDocumentTypes)[number];
 
+/** Fields a model may return for each supported document type. */
+export const extractionFields = Object.freeze({
+  royalty_pass: Object.freeze(["passNumber", "passDate", "quarryOrVendor", "netWeight", "vehicle", "amount"]),
+  delivery_challan: Object.freeze(["challanNumber", "challanDate", "vendor", "quantity", "vehicle"]),
+  supplier_invoice: Object.freeze(["invoiceNumber", "invoiceDate", "vendor", "amount", "taxAmounts", "supplierBankDetails"]),
+  tender_notice: Object.freeze(["noticeNumber", "issuingOffice", "workItems", "dates"]),
+} satisfies Record<ExtractionDocumentType, readonly string[]>);
+
 type PageFacts<T> = { readonly [Field in keyof T]?: Fact<T[Field]> };
 type RolledFacts<T> = { readonly [Field in keyof T]?: RolledField<T[Field]> };
 type RawPageFields<T> = { readonly [Field in keyof T]?: T[Field] };
@@ -109,7 +117,7 @@ function object(value: unknown): Record<string, unknown> | undefined {
 
 function optionalText(input: Record<string, unknown>, key: string, errors: ValidationIssue[]): string | undefined {
   const value = input[key];
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   if (typeof value !== "string" || value.trim().length === 0) {
     errors.push({ path: key, message: "must be a non-empty string when shown" });
     return undefined;
@@ -119,7 +127,7 @@ function optionalText(input: Record<string, unknown>, key: string, errors: Valid
 
 function optionalTextList(input: Record<string, unknown>, key: string, errors: ValidationIssue[]): readonly string[] | undefined {
   const value = input[key];
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   if (!Array.isArray(value) || value.length === 0 || value.some((item) => typeof item !== "string" || item.trim().length === 0)) {
     errors.push({ path: key, message: "must be a non-empty list of non-empty strings when shown" });
     return undefined;
@@ -151,7 +159,7 @@ export function printedAmountToPaise(value: unknown): Money | undefined {
 
 function optionalQuantity(input: Record<string, unknown>, key: string, errors: ValidationIssue[]): Quantity | undefined {
   const value = input[key];
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   const converted = printedKilogramsToQuantity(value);
   if (converted === undefined) errors.push({ path: key, message: "must be an exact printed whole-kilogram value such as 12,420 kg" });
   return converted;
@@ -159,7 +167,7 @@ function optionalQuantity(input: Record<string, unknown>, key: string, errors: V
 
 function optionalMoney(input: Record<string, unknown>, key: string, errors: ValidationIssue[]): Money | undefined {
   const value = input[key];
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   const converted = printedAmountToPaise(value);
   if (converted === undefined) errors.push({ path: key, message: "must be a printed rupees-and-paise string" });
   return converted;
@@ -167,7 +175,7 @@ function optionalMoney(input: Record<string, unknown>, key: string, errors: Vali
 
 function optionalTaxes(input: Record<string, unknown>, errors: ValidationIssue[]): Readonly<Record<string, Money>> | undefined {
   const value = input.taxAmounts;
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   const taxes = object(value);
   if (taxes === undefined || Object.keys(taxes).length === 0) {
     errors.push({ path: "taxAmounts", message: "must be a non-empty object when shown" });
@@ -188,7 +196,7 @@ function optionalTaxes(input: Record<string, unknown>, errors: ValidationIssue[]
 
 function optionalBankDetails(input: Record<string, unknown>, errors: ValidationIssue[]): SupplierBankDetails | undefined {
   const value = input.supplierBankDetails;
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   const details = object(value);
   if (details === undefined) {
     errors.push({ path: "supplierBankDetails", message: "must be an object when shown" });
@@ -211,14 +219,8 @@ function validateRawFields<Type extends ExtractionDocumentType>(type: Type, valu
   const input = object(value);
   if (input === undefined) return { ok: false, errors: [{ path: "$", message: "must be an object" }] };
   const errors: ValidationIssue[] = [];
-  const allowedFields: Record<ExtractionDocumentType, readonly string[]> = {
-    royalty_pass: ["passNumber", "passDate", "quarryOrVendor", "netWeight", "vehicle", "amount"],
-    delivery_challan: ["challanNumber", "challanDate", "vendor", "quantity", "vehicle"],
-    supplier_invoice: ["invoiceNumber", "invoiceDate", "vendor", "amount", "taxAmounts", "supplierBankDetails"],
-    tender_notice: ["noticeNumber", "issuingOffice", "workItems", "dates"],
-  };
   for (const key of Object.keys(input)) {
-    if (!allowedFields[type].includes(key)) errors.push({ path: key, message: "is not a field for this document type" });
+    if (!extractionFields[type].includes(key)) errors.push({ path: key, message: "is not a field for this document type" });
   }
   let fields: RawPageFields<RawFields<Type>>;
   switch (type) {
@@ -268,9 +270,15 @@ function validateRawFields<Type extends ExtractionDocumentType>(type: Type, valu
 }
 
 function extractionSchema<Type extends ExtractionDocumentType>(documentType: Type): StructuredSchema<RawPageFields<RawFields<Type>>> {
+  const fields = extractionFields[documentType];
   return {
     name: `${documentType}_field_extraction`,
-    jsonSchema: { type: "object", additionalProperties: false, properties: {} },
+    jsonSchema: {
+      type: "object",
+      additionalProperties: false,
+      properties: Object.fromEntries(fields.map((field) => [field, { type: ["string", "null"] }])),
+      required: [...fields],
+    },
     validate: (value) => validateRawFields(documentType, value),
   };
 }

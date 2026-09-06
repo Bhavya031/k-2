@@ -261,3 +261,11 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 — /root — FINISH DISAGREEMENT-PRESERVING-EXTRACTION
 - Resolved conflicting page facts deterministically by frequency, confidence, then page while retaining disagreement evidence; batch accrues resolved delivery facts and queues one priority-50 review per conflicted field. Existing duplicate-ingest short-circuit and its two-ingest test already prevent a duplicate source insert. `bun test --timeout 30000`: 138 pass, 0 fail, 468 `expect()` calls across 21 files; typecheck and `git diff --check` passed. Mutation moved page order before frequency: `resolves A, A, B by frequency while retaining the vendor disagreement` failed with expected value A, received B; restored byte-for-byte.
+
+## 2026-09-06 — /root — START EXTRACTION-JSON-SCHEMA-BLOCKER
+- Claiming the Stage 4 extraction schema repair: share fields between validation and provider schema, preserve strict unknown-field rejection, and accept explicit null as absent.
+
+## 2026-09-06 — /root — FINISH EXTRACTION-JSON-SCHEMA-BLOCKER
+- Added one exported per-type field list shared by raw-field validation and strict structured-output schema construction. Every schema field is required and nullable; explicit null values are omitted before facts are attached without changing string, quantity, money, list, tax, or bank-detail handling.
+- `bun test --timeout 30000`: 141 pass, 0 fail, 521 `expect()` calls across 21 files; `bun x --package typescript@5.9.2 tsc --noEmit` and `git diff --check`: passed.
+- mutation check: removed `vehicle` from the shared `royalty_pass` field list; `publishes every royalty-pass field as a required nullable string` failed with the exact diff showing `-   "vehicle",`. Restored the field exactly and reran green.

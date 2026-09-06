@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   extractPageFields,
+  extractionFields,
   printedAmountToPaise,
   printedKilogramsToQuantity,
   resolveFieldValues,
@@ -9,9 +10,15 @@ import {
   type ExtractionDocumentType,
   type PageExtractionRequest,
 } from "../src/extract/extract.ts";
-import type { StructuredProvider } from "../src/model/boundary.ts";
+import type { StructuredProvider, StructuredRequest } from "../src/model/boundary.ts";
 
 const syntheticImage = Object.freeze({ label: "synthetic-page", mediaType: "image/png" as const, bytes: new Uint8Array([137, 80, 78, 71]) });
+const expectedExtractionFields = Object.freeze({
+  royalty_pass: ["passNumber", "passDate", "quarryOrVendor", "netWeight", "vehicle", "amount"],
+  delivery_challan: ["challanNumber", "challanDate", "vendor", "quantity", "vehicle"],
+  supplier_invoice: ["invoiceNumber", "invoiceDate", "vendor", "amount", "taxAmounts", "supplierBankDetails"],
+  tender_notice: ["noticeNumber", "issuingOffice", "workItems", "dates"],
+} satisfies Record<ExtractionDocumentType, readonly string[]>);
 
 function syntheticProvider(...responses: unknown[]): StructuredProvider & { readonly calls: () => number } {
   let calls = 0;
@@ -22,6 +29,19 @@ function syntheticProvider(...responses: unknown[]): StructuredProvider & { read
       return { data: response };
     },
     calls: () => calls,
+  };
+}
+
+function schemaCapturingProvider(response: unknown): StructuredProvider & { readonly requests: readonly StructuredRequest[] } {
+  const requests: StructuredRequest[] = [];
+  return {
+    async request(request) {
+      requests.push(request);
+      return { data: response };
+    },
+    get requests() {
+      return requests;
+    },
   };
 }
 
@@ -37,6 +57,68 @@ function request<Type extends ExtractionDocumentType>(documentType: Type, page =
 }
 
 describe("Stage 4 field extraction", () => {
+  test("publishes every royalty-pass field as a required nullable string", async () => {
+    const provider = schemaCapturingProvider(Object.fromEntries(expectedExtractionFields.royalty_pass.map((field) => [field, null])));
+
+    expect(extractionFields.royalty_pass).toEqual(expectedExtractionFields.royalty_pass);
+    const result = await extractPageFields(provider, request("royalty_pass"));
+    const schema = provider.requests[0]!.schema.jsonSchema as { properties: Record<string, unknown>; required: readonly string[]; additionalProperties: boolean };
+
+    expect(result.ok).toBe(true);
+    expect(Object.keys(schema.properties)).toEqual([...extractionFields.royalty_pass]);
+    expect(schema.required).toEqual(extractionFields.royalty_pass);
+    expect(schema.additionalProperties).toBe(false);
+    for (const field of extractionFields.royalty_pass) expect(schema.properties[field]).toEqual({ type: ["string", "null"] });
+  });
+
+  test("publishes every other document type's fields as required nullable strings matching the shared field list", async () => {
+    const documentTypes = ["delivery_challan", "supplier_invoice", "tender_notice"] as const;
+
+    for (const documentType of documentTypes) {
+      const provider = schemaCapturingProvider(Object.fromEntries(expectedExtractionFields[documentType].map((field) => [field, null])));
+      const result = await extractPageFields(provider, request(documentType));
+      const schema = provider.requests[0]!.schema.jsonSchema as { properties: Record<string, unknown>; required: readonly string[]; additionalProperties: boolean };
+
+      expect(result.ok).toBe(true);
+      expect(extractionFields[documentType]).toEqual(expectedExtractionFields[documentType]);
+      expect(Object.keys(schema.properties)).toEqual([...extractionFields[documentType]]);
+      expect(schema.required).toEqual(extractionFields[documentType]);
+      expect(schema.additionalProperties).toBe(false);
+      for (const field of extractionFields[documentType]) expect(schema.properties[field]).toEqual({ type: ["string", "null"] });
+    }
+  });
+
+  test("omits explicit null fields without errors and retains only mixed shown values with their current types", async () => {
+    const allNull = schemaCapturingProvider(Object.fromEntries(extractionFields.delivery_challan.map((field) => [field, null])));
+    const nullResult = await extractPageFields(allNull, request("delivery_challan"));
+    expect(nullResult.ok).toBe(true);
+    if (nullResult.ok) {
+      expect(nullResult.value.fields).toEqual({});
+      expect(nullResult.validationErrors).toEqual([]);
+    }
+
+    const mixed = schemaCapturingProvider({
+      invoiceNumber: "SYN-INV-NULLS",
+      invoiceDate: null,
+      vendor: "Synthetic Aggregate",
+      amount: "₹ 9,999.00",
+      taxAmounts: { CGST: "₹ 450.00" },
+      supplierBankDetails: null,
+    });
+    const mixedResult = await extractPageFields(mixed, request("supplier_invoice"));
+    expect(mixedResult.ok).toBe(true);
+    if (mixedResult.ok) {
+      expect(Object.keys(mixedResult.value.fields)).toEqual(["invoiceNumber", "vendor", "amount", "taxAmounts"]);
+      expect(mixedResult.value.fields.invoiceNumber?.value).toBe("SYN-INV-NULLS");
+      expect(mixedResult.value.fields.vendor?.value).toBe("Synthetic Aggregate");
+      expect(Number(mixedResult.value.fields.amount?.value)).toBe(999_900);
+      expect(Object.fromEntries(Object.entries(mixedResult.value.fields.taxAmounts?.value ?? {}).map(([name, amount]) => [name, Number(amount)]))).toEqual({ CGST: 45_000 });
+      expect("invoiceDate" in mixedResult.value.fields).toBe(false);
+      expect("supplierBankDetails" in mixedResult.value.fields).toBe(false);
+      expect(mixedResult.validationErrors).toEqual([]);
+    }
+  });
+
   test("extracts visibly printed royalty-pass fields, omits an absent vehicle, and converts kilograms at the paper boundary", async () => {
     const provider = syntheticProvider({
       passNumber: "SYN-RP-008",

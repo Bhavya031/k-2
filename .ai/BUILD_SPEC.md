@@ -248,8 +248,14 @@ font, no CDN. It is opened from a filesystem on a laptop with no internet.
 
 What an accountant opens it to ask, in order: what do we owe that has not been
 billed, what arrived that disagrees with the evidence, and what is about to
-leave the bank with its deductions shown. Plus the documents resolved, the
-projects, and exact-first search.
+leave the bank with its deductions shown. Plus the documents resolved, and
+search.
+
+Search is exact-first over what the store already holds: a pass number, a vendor
+name, a reference, an amount. It is not a question-answering surface and there
+is no conversational agent. The questions this business asks are exact ones, and
+an exact index answers them without a model call. Do not build a chat interface
+and do not add a vector index.
 
 Variances belong in the exceptions list — that is the queue a person works.
 

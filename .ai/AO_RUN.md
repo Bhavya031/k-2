@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Maintenance claim:** Harden `safeFilename`, expose local-model stderr, then rebase PRs #21 and #22 — IN PROGRESS on `ao/k-2-28/root`.
+**Maintenance claim:** Demo invoice exporter — REVIEW on `ao/k-2-25/demo-invoices`; eight-stage table unchanged.
 **Stage:** Stage 10 exception-review follow-up — REVIEW. The localhost ledger surface now has the existing ReviewQueue as its only bookkeeping write path; the original eight-stage board below is retained unchanged.
 **Parallel claim:** Telegram `MessagingTransport` adapter — REVIEW on `ao/k-2-28/root`; watcher work remains separate.
 **Main:** Stages 1–8 merged — foundation through the offline report page.

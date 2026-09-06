@@ -252,3 +252,9 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 — /root — START MAINTENANCE-REBASING
 - Hardening filename and local-model diagnostics before rebasing the active intake and messaging PRs onto main.
+
+## 2026-09-06 — /root — START DEMO-INVOICE-EXPORTER
+- Implementing a PDF-only synthetic/simulated invoice exporter for existing pipeline accruals; no database writes or matching/payment/pipeline changes.
+
+## 2026-09-06 — /root — FINISH DEMO-INVOICE-EXPORTER
+- PDF-only exporter writes exactly three synthetic/simulated supplier invoices and manifest from existing accruals, without database writes or pipeline/matching/payment changes. `bun test --timeout 30000`: 133 pass, 0 fail, 456 `expect()` calls across 21 files; typecheck and `git diff --check` passed. Mutation: changed rate-variance quantity to 2999; `copies Gujarati vendor bytes, uses integer +50, and renders marker PDFs with a rate not quantity variance` failed: expected 3000, received 2999; restored byte-for-byte.

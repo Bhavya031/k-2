@@ -1,0 +1,35 @@
+import { Database } from "bun:sqlite";
+
+import type { StructuredProvider } from "../model/boundary.ts";
+import { askLedger, type LedgerResponse } from "./ledger.ts";
+
+const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K-2 · Ask the ledger</title><style>
+:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#17262b;background:#edf2ef}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1100px;margin:auto;padding:42px 22px}header{display:flex;justify-content:space-between;gap:24px;align-items:start;margin-bottom:26px}.eyebrow{letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:#137067;font-size:.78rem}h1{font-size:clamp(2.1rem,5vw,4rem);line-height:1;margin:.25rem 0 1rem}.lede{max-width:660px;font-size:1.12rem;line-height:1.6;color:#4c5b5e}.safe{background:#143a39;color:#e9f6f0;padding:14px 16px;border-radius:12px;max-width:270px;font-size:.9rem;line-height:1.35}.panel{background:#fff;border:1px solid #ccd9d4;border-radius:18px;box-shadow:0 18px 45px #21423915;padding:26px}.examples{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0 20px}.examples button{border:1px solid #bed4cc;background:#f2f8f5;color:#164d46;border-radius:99px;padding:8px 12px;cursor:pointer}label{font-weight:700;display:block;margin-bottom:8px}textarea{width:100%;min-height:110px;border:1px solid #9eb8b0;border-radius:10px;padding:14px;font:inherit;font-size:1.05rem;resize:vertical}button[type=submit]{margin-top:14px;background:#d76c32;color:#fff;border:0;border-radius:9px;padding:12px 20px;font:inherit;font-weight:800;cursor:pointer}.result{margin-top:22px;border-top:1px solid #dae5df;padding-top:20px}.result h2{margin:0 0 12px;font-size:1.35rem}.answer{font-size:1.05rem;line-height:1.65}.answer p{margin:.45rem 0}.citations{margin-top:16px;background:#f3f7f5;border-radius:10px;padding:12px}.citations strong{display:block;margin-bottom:6px}.citations ul{margin:0;padding-left:20px}.muted{color:#58696a}.overview{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.metric{background:#143a39;color:#fff;padding:16px;border-radius:12px}.metric b{display:block;font-size:1.8rem}.metric span{color:#b8d4ca;font-size:.84rem}.error{color:#9b251c;font-weight:700}@media(max-width:700px){header{display:block}.safe{max-width:none;margin-top:18px}}
+</style></head><body><main class="wrap"><header><div><div class="eyebrow">Live, read-only ledger</div><h1>Ask the ledger.</h1><p class="lede">Ask in plain language. The assistant selects a safe lookup; the ledger calculates every amount and names every source record.</p></div><div class="safe">Read-only view · localhost only<br>Nothing here approves, changes, or pays anything.</div></header><section class="panel"><form id="ask"><label for="question">Your question</label><textarea id="question" placeholder="What did we take from Synthetic Ganesh Quarry last month?"></textarea><div class="examples"><button type="button">Which vendors are unpaid past their terms?</button><button type="button">Find pass reference PASS-77</button><button type="button">Give me the unbilled list as a file</button></div><button type="submit">Ask the ledger</button></form><div id="result" class="result" aria-live="polite"><p class="muted">Answers will appear here with their source records.</p></div><div id="overview" class="overview" aria-live="polite"></div></section></main><script>
+const q=document.querySelector('#question'), result=document.querySelector('#result');document.querySelectorAll('.examples button').forEach(b=>b.onclick=()=>q.value=b.textContent);const node=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e};const renderCitations=(target,citations)=>{const d=node('div','', 'citations');d.append(node('strong','Source records'));const ul=document.createElement('ul');citations.forEach(c=>ul.append(node('li',c.table+' · '+c.id+' — '+c.label)));d.append(ul);target.append(d)};document.querySelector('#ask').onsubmit=async event=>{event.preventDefault();result.replaceChildren(node('p','Looking up the ledger…','muted'));try{const response=await fetch('/api/ask',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({question:q.value})});const data=await response.json();if(!response.ok)throw new Error(data.error);result.replaceChildren();if(data.kind==='file'){const link=node('a','Download '+data.filename);link.href=URL.createObjectURL(new Blob([data.content],{type:data.contentType}));link.download=data.filename;result.append(node('h2','File prepared from ledger rows'));result.append(link);renderCitations(result,data.citations);return}result.append(node('h2',data.heading));const answer=node('div','', 'answer');data.fragments.forEach(x=>answer.append(node('p',x)));result.append(answer);renderCitations(result,data.citations)}catch(error){result.replaceChildren(node('p',error instanceof Error?error.message:'Could not ask the ledger.','error'))}};fetch('/api/overview').then(r=>r.json()).then(data=>{const out=document.querySelector('#overview');out.replaceChildren(...data.map(x=>{const d=node('div','', 'metric');d.append(node('b',String(x.count)));d.append(node('span',x.label));return d}))});
+</script></body></html>`;
+
+export type LedgerServer = Readonly<{ url: string; stop(): void }>;
+export function startLedgerServer(options: Readonly<{ databasePath: string; provider: StructuredProvider; port?: number }>): LedgerServer {
+  const database = new Database(options.databasePath, { readonly: true });
+  database.exec("PRAGMA query_only = ON;");
+  const server = Bun.serve({ hostname: "127.0.0.1", port: options.port ?? 3000, fetch: async (request) => {
+    const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/") return new Response(page, { headers: { "content-type": "text/html; charset=utf-8" } });
+    if (request.method === "GET" && url.pathname === "/api/overview") {
+      const counts = [
+        ["Current documents", "source_documents"], ["Accruals", "accruals"], ["Matches", "accrual_matches"], ["Review queue", "review_items"], ["Payment runs", "payment_runs"],
+      ].map(([label, table]) => ({ label, count: (database.query(`SELECT count(*) AS count FROM ${table}`).get() as { count: number }).count }));
+      return Response.json(counts);
+    }
+    if (request.method === "POST" && url.pathname === "/api/ask") {
+      try {
+        const body = await request.json() as { question?: unknown };
+        if (typeof body.question !== "string") throw new Error("Question is required");
+        return Response.json(await askLedger(database, options.provider, body.question));
+      } catch (error) { return Response.json({ error: error instanceof Error ? error.message : "Unable to ask ledger" }, { status: 400 }); }
+    }
+    return new Response("Not found", { status: 404 });
+  }});
+  return Object.freeze({ url: server.url.toString(), stop: () => { server.stop(true); database.close(); } });
+}

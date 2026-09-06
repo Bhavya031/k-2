@@ -210,3 +210,11 @@ The repository carries the memory, not the chat.
 ## 2026-09-06 — /root — FINISH POST-STAGE-REAL-DEMO (BLOCKED)
 - commits 42b3b3d and 68c845e; PR #18 opened. External held-out source used pages 1–36, withholding ground-truth documents 10–11 (pages 37–39 and 40–42). A subscription CLI run with an unsupported model was stopped; the supported model reached only page 8 after 111 seconds with concurrency 1, so it was stopped rather than incur unbounded cost. No real content entered this repository.
 - `bun test`: 107 pass, 0 fail, 356 `expect()` calls across 17 files; typecheck and `git diff --check` passed. Shim mutation replacing `--sandbox` failed its command-contract test exactly as expected; restored.
+
+## 2026-09-06 — /root — START STAGE-10
+- Building the separate localhost-only ledger question-and-answer surface with store-backed figures and citations.
+
+## 2026-09-06 — /root — FINISH STAGE-10
+- Separate localhost-only read surface committed with closed structured planner, typed-store answers/citations, and CSV files from rows; Stage 8 remains untouched.
+- `bun test`: 113 pass, 0 fail, 373 `expect()` calls across 18 files; `bun run typecheck` and `git diff --check`: passed.
+- mutation check: permitted a model `wording` field on the pass plan; `retries only the malformed plan and cannot render a fabricated model number` failed exactly with `Expected: 2` / `Received: 1` (and schema test failed). Restored exactly and reran green.

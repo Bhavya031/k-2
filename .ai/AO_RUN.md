@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** none started.
+**Stage:** 1 — Foundation (persistence sub-piece in progress).
 **Main:** seed commit only — specification, rules, task board, demo inputs.
 **Suite on main:** no tests exist yet.
 **Blocking:** nothing.
@@ -40,7 +40,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
-| 1 | Foundation | TODO | | | |
+| 1 | Foundation | DISPATCHED | ao/k-2-10/root | | persistence schema/migration sub-piece |
 | 2 | Model boundary | TODO | | | |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |
@@ -56,7 +56,7 @@ one worktree each, and merge one at a time.
 
 ---|---|---|---|---|---|
 | 1 | Project skeleton | TODO | | | |
-| 2 | Config, value types, persistence | TODO | | | |
+| 2 | Config, value types, persistence | DISPATCHED | ao/k-2-10/root | | persistence schema/migration sub-piece |
 | 3 | Foundations | TODO | | | |
 | 4 | Model boundary | TODO | | | |
 | 5 | Real provider and test harness | TODO | | | |

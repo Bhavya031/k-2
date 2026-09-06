@@ -20,3 +20,6 @@ Format:
 ```
 
 The repository carries the memory, not the chat.
+
+## 2026-09-06 14:13 IST — /root — START STAGE-1-STORE
+- Building only the Stage 1 SQLite STRICT schema, idempotent migration, and isolated Bun schema tests.

@@ -10,9 +10,10 @@
 - Record no real payment action. The close and every payment view must say:
   **"Payment preparation only. Human approval required. Bank execution is not
   product code."**
-- Do not describe the Telegram adapter as live or deployed. Do not mention a
-  RazorpayX integration, supplier email, or real supplier invoices: none is
-  shipped here.
+- Do not describe the Telegram adapter as live or deployed, and do not show a
+  real supplier invoice. Where a payout request is shown, say it is a prepared
+  request that nothing in this system sends: no bank is contacted, no money
+  moves, and a person decides whether to submit it.
 
 ## Before rolling camera
 

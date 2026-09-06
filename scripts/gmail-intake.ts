@@ -11,6 +11,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { loadConfig, type GmailIntakeConfiguration } from "../src/config.ts";
+
 type Attachment = Readonly<{ filename: string; attachmentId: string }>;
 type MessagePart = Readonly<{ mimeType?: string; filename?: string; body?: { attachmentId?: string }; parts?: readonly MessagePart[] }>;
 
@@ -25,30 +27,22 @@ function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);
 }
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value.trim() === "") throw new Error(`missing ${name}`);
-  return value;
-}
-
 /** Exchanges the long-lived refresh token for a short-lived access token. */
-export async function accessToken(): Promise<string> {
-  const override = process.env.GMAIL_ACCESS_TOKEN;
-  if (override !== undefined && override.trim() !== "") return override;
+export async function accessToken(configuration: GmailIntakeConfiguration): Promise<string> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: required("CLIENT_ID"),
-      client_secret: required("CLIENT_SECRET"),
-      refresh_token: required("REFRESH_TOKEN"),
+      client_id: configuration.clientId,
+      client_secret: configuration.clientSecret,
+      refresh_token: configuration.refreshToken,
       grant_type: "refresh_token",
     }),
   });
-  const payload = (await response.json()) as { access_token?: string; error?: string; error_description?: string };
+  const payload = (await response.json()) as { access_token?: string; error?: string };
   // The credential values themselves are never echoed, only Google's error name.
   if (!response.ok || payload.access_token === undefined) {
-    throw new Error(`token refresh failed: ${payload.error ?? response.status} ${payload.error_description ?? ""}`.trim());
+    throw new Error(`token refresh failed: ${payload.error ?? response.status}`);
   }
   return payload.access_token;
 }
@@ -122,16 +116,18 @@ async function poll(token: string, label: string, intakeDir: string, statePath: 
 }
 
 if (import.meta.main) {
+  const configuration = loadConfig().gmailIntake;
+  if (configuration === undefined) throw new Error("Gmail intake configuration is absent");
   const label = argument("label", "k2-bills");
   const intakeDir = argument("intake-dir", "./intake");
   const statePath = argument("state", "./.gmail-intake-state.json");
   const pollMs = Number.parseInt(argument("poll-ms", "15000"), 10);
   if (!Number.isInteger(pollMs) || pollMs <= 0) throw new Error("--poll-ms must be a positive integer");
   mkdirSync(intakeDir, { recursive: true });
-  const token = await accessToken();
+  const token = await accessToken(configuration);
   await poll(token, label, intakeDir, statePath, flag("mark-read"));
   if (!flag("once")) {
     // A fresh access token per cycle: the short-lived one expires in an hour.
-    setInterval(() => { void accessToken().then((next) => poll(next, label, intakeDir, statePath, flag("mark-read"))).catch((error: unknown) => console.error(String(error))); }, pollMs);
+    setInterval(() => { void accessToken(configuration).then((next) => poll(next, label, intakeDir, statePath, flag("mark-read"))).catch((error: unknown) => console.error(String(error))); }, pollMs);
   }
 }

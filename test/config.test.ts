@@ -58,12 +58,17 @@ describe("loadConfig", () => {
       MESSAGING_BOT_TOKEN: "synthetic-bot-token",
       MESSAGING_ALLOWED_SENDERS: "synthetic-driver-1, synthetic-driver-2, synthetic-driver-1",
       BOUNDARY_MODEL: "synthetic-boundary-model",
+      GMAIL_CLIENT_ID: "synthetic-client-id",
+      GMAIL_CLIENT_SECRET: "synthetic-client-secret",
+      GMAIL_REFRESH_TOKEN: "synthetic-refresh-token",
     });
 
     expect(config.modelMaxConcurrency).toBe(4);
     expect(config.messaging).toEqual({ botToken: "synthetic-bot-token", allowedSenders: ["synthetic-driver-1", "synthetic-driver-2"] });
     expect(config.boundaryModel).toBe("synthetic-boundary-model");
+    expect(config.gmailIntake).toEqual({ clientId: "synthetic-client-id", clientSecret: "synthetic-client-secret", refreshToken: "synthetic-refresh-token" });
     expect(Object.isFrozen(config.messaging)).toBe(true);
+    expect(Object.isFrozen(config.gmailIntake)).toBe(true);
   });
 
   test("leaves optional capabilities absent when their keys are missing", () => {
@@ -72,6 +77,7 @@ describe("loadConfig", () => {
     expect("modelMaxConcurrency" in config).toBe(false);
     expect("messaging" in config).toBe(false);
     expect("boundaryModel" in config).toBe(false);
+    expect("gmailIntake" in config).toBe(false);
   });
 
   test("names a missing required database key", () => {
@@ -115,6 +121,10 @@ describe("loadConfig", () => {
 
   test("rejects blank sender identifiers in the optional messaging allow-list", () => {
     expect(() => loadConfig({ ...baseEnvironment, MESSAGING_BOT_TOKEN: "synthetic-token", MESSAGING_ALLOWED_SENDERS: "synthetic-driver-1,,synthetic-driver-2" })).toThrow("MESSAGING_ALLOWED_SENDERS");
+  });
+
+  test("requires every Gmail intake credential once any Gmail intake key is configured", () => {
+    expect(() => loadConfig({ ...baseEnvironment, GMAIL_CLIENT_ID: "synthetic-client-id" })).toThrow("GMAIL_CLIENT_SECRET");
   });
 
 });

@@ -10,7 +10,7 @@ polls. It reads mail and writes files. It books nothing and pays nothing.
 1. Create a Gmail label, by default `k2-bills`.
 2. Create an OAuth client and authorise it for the `gmail.modify` scope, then
    put the client id, client secret, and refresh token in `.env` as
-   `CLIENT_ID`, `CLIENT_SECRET`, and `REFRESH_TOKEN`.
+   `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, and `GMAIL_REFRESH_TOKEN`.
 
    The refresh token must be minted by *that same* client. A token obtained
    from the OAuth Playground without ticking "Use your own OAuth credentials"

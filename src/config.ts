@@ -18,11 +18,18 @@ export type MessagingConfiguration = Readonly<{
   allowedSenders: readonly string[];
 }>;
 
+export type GmailIntakeConfiguration = Readonly<{
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+}>;
+
 export type AppConfig = Readonly<{
   databasePath: string;
   model: ModelConfiguration;
   modelMaxConcurrency?: number;
   messaging?: MessagingConfiguration;
+  gmailIntake?: GmailIntakeConfiguration;
   boundaryModel?: string;
 }>;
 
@@ -105,11 +112,24 @@ function parseAllowedSenders(environment: Environment): readonly string[] {
   return Object.freeze([...new Set(senders)]);
 }
 
+function parseGmailIntake(environment: Environment): GmailIntakeConfiguration | undefined {
+  const clientId = optional(environment, "GMAIL_CLIENT_ID");
+  const clientSecret = optional(environment, "GMAIL_CLIENT_SECRET");
+  const refreshToken = optional(environment, "GMAIL_REFRESH_TOKEN");
+  if (clientId === undefined && clientSecret === undefined && refreshToken === undefined) return undefined;
+  return Object.freeze({
+    clientId: clientId ?? required(environment, "GMAIL_CLIENT_ID"),
+    clientSecret: clientSecret ?? required(environment, "GMAIL_CLIENT_SECRET"),
+    refreshToken: refreshToken ?? required(environment, "GMAIL_REFRESH_TOKEN"),
+  });
+}
+
 function parseConfig(environment: Environment): AppConfig {
   const modelMaxConcurrency = parseConcurrency(environment);
   const botToken = optional(environment, "MESSAGING_BOT_TOKEN");
   const boundaryModel = optional(environment, "BOUNDARY_MODEL");
   const allowedSenders = parseAllowedSenders(environment);
+  const gmailIntake = parseGmailIntake(environment);
 
   return Object.freeze({
     databasePath: required(environment, "DATABASE_PATH"),
@@ -118,6 +138,7 @@ function parseConfig(environment: Environment): AppConfig {
     ...(botToken === undefined
       ? {}
       : { messaging: Object.freeze({ botToken, allowedSenders }) }),
+    ...(gmailIntake === undefined ? {} : { gmailIntake }),
     ...(boundaryModel === undefined ? {} : { boundaryModel }),
   });
 }

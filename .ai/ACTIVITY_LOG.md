@@ -292,3 +292,11 @@ The repository carries the memory, not the chat.
 - implementation commit e99c384029c4d6e557fe0ea3e93b747e7aa23af3; accurate README and 3:40 filming runbook landed, with only synthetic/simulated demo material and the payment-preparation boundary.
 - Markdown local-link, documented-command, documentation-safety, and `git diff --check` checks passed. `bun run typecheck` and `bun run test` could not run because `bun` is not installed in this worker environment (`zsh: command not found: bun`).
 - mutation check: replaced `no RazorpayX integration` with `no payment-platform integration`; the documentation safety assertion failed exactly: `README.md is missing required wording: no RazorpayX integration`; restored exactly and reran green.
+## 2026-09-06 — /root — START GMAIL-INTAKE-CONFIGURATION-FIX
+- Claiming PR #31 follow-up: route Gmail intake credentials through the sole validated startup configuration boundary before merge.
+
+## 2026-09-06 — /root — FINISH GMAIL-INTAKE-CONFIGURATION-FIX
+- Routed optional Gmail intake OAuth values through frozen validated startup configuration, removed Gmail-script environment access, and stopped token errors from exposing provider descriptions.
+- `bun run test`: 163 pass, 0 fail, 552 `expect()` calls across 22 files; `bun run typecheck` and `git diff --check` passed.
+- mutation check: replaced the required Gmail client-secret validation with an empty fallback; `requires every Gmail intake credential once any Gmail intake key is configured` failed, expecting `GMAIL_CLIENT_SECRET` but receiving the later missing-key error. Restored exactly.
+

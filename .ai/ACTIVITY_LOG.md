@@ -117,3 +117,6 @@ The repository carries the memory, not the chat.
 - mutation check: changed the existing-document condition from `exists !== null` to `exists === null`; all 4 Stage 3 tests failed with `TypeError: null is not an object (evaluating '...page_count')`; restored exactly and reran the whole suite green.
 
 - 2026-09-06 — Stage 3 merged: PR #6 (f42cd26); final `bun test` 44 pass, 0 fail, 128 `expect()` calls across 6 files; `bun run typecheck` passed; `git diff --check` passed.
+
+- 2026-09-06 — Stage 4 Piece A segmentation START: claimed by AO session k-2-15.
+- 2026-09-06 — Stage 4 Piece A segmentation FINISH: `bun test` 50 pass, 0 fail, 140 `expect()` calls across 7 files; `bun run typecheck` passed; `git diff --check` passed. Mutation changed later-window overwrite to first-window retention: 49 pass, 1 fail; `uses the later overlapping window deterministically when page 8 disagrees` failed with `expect(received).toEqual(expected)`; restored exactly and reran green.

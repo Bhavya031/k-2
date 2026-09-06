@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — seeded, nothing built.
+Last updated: 2026-09-06 — Stage 1 persistence schema/migration sub-piece ready for review.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** 1 — Foundation (persistence sub-piece in progress).
+**Stage:** 1 — Foundation (persistence sub-piece ready for review; other pieces remain).
 **Main:** seed commit only — specification, rules, task board, demo inputs.
 **Suite on main:** no tests exist yet.
 **Blocking:** nothing.
@@ -56,7 +56,7 @@ one worktree each, and merge one at a time.
 
 ---|---|---|---|---|---|
 | 1 | Project skeleton | TODO | | | |
-| 2 | Config, value types, persistence | DISPATCHED | ao/k-2-10/root | | persistence schema/migration sub-piece |
+| 2 | Config, value types, persistence | REVIEW | ao/k-2-10/root | 1e344c605a5fe5caf7d3ac95b39490a530e82c21 | persistence schema/migration sub-piece: 6 pass, 0 fail |
 | 3 | Foundations | TODO | | | |
 | 4 | Model boundary | TODO | | | |
 | 5 | Real provider and test harness | TODO | | | |

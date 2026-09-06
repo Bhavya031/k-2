@@ -23,3 +23,8 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 14:13 IST — /root — START STAGE-1-STORE
 - Building only the Stage 1 SQLite STRICT schema, idempotent migration, and isolated Bun schema tests.
+
+## 2026-09-06 14:16 IST — /root — FINISH STAGE-1-STORE
+- implementation commit 1e344c605a5fe5caf7d3ac95b39490a530e82c21; STRICT SQLite store migration and isolated schema tests landed.
+- `bun test`: 6 pass, 0 fail, 16 expect() calls across 1 file; `bun build --no-bundle`: passed (transpilation check; no project typecheck tooling exists); `git diff --check`: passed.
+- mutation check: removed the non-negative quantity condition; `quantities reject negative values` failed with `Expected substring: "CHECK constraint failed"` and `Received function did not throw`; restored exactly and reran green.

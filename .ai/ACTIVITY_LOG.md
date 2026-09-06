@@ -28,3 +28,6 @@ The repository carries the memory, not the chat.
 - implementation commit 60aa234fa02ec79761082f3e1b081202e58670b7; added startup-only validated configuration with optional model capability selection.
 - `bun test`: 8 pass, 0 fail, 11 assertions across 1 file; `bun build src/config.ts --target=bun`: passed; `git diff --check`: passed.
 - mutation check: changed the OpenAI selector branch to `local`; `returns an immutable OpenAI capability for the closed provider selector` failed with `Configuration error: MODEL_PROVIDER must be one of: openai, local` (4 failures total); reverted and the suite passed.
+
+## 2026-09-06 08:51 IST — root/local — START TASK-002
+- Correcting the Stage 1 configuration provider contract and adding declared optional capabilities.

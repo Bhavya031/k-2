@@ -164,7 +164,7 @@ export class AnthropicProvider implements StructuredProvider {
 
 export type LocalExecutor = (input: Readonly<{ prompt: string; images: readonly LabelledImage[]; schema: JsonSchema; validationErrors?: readonly ValidationIssue[] }>) => Promise<unknown>;
 
-async function runLocalBinary(command: string, input: Parameters<LocalExecutor>[0]): Promise<unknown> {
+export async function runLocalBinary(command: string, input: Parameters<LocalExecutor>[0]): Promise<unknown> {
   const result = Bun.spawnSync({
     cmd: [command],
     stdin: new TextEncoder().encode(JSON.stringify(input)),
@@ -172,7 +172,7 @@ async function runLocalBinary(command: string, input: Parameters<LocalExecutor>[
     stderr: "pipe",
   });
   if (result.exitCode !== 0) {
-    throw new Error(`Local model command failed with exit code ${result.exitCode}`);
+    throw new Error(`Local model command failed with exit code ${result.exitCode}: ${new TextDecoder().decode(result.stderr)}`);
   }
   return JSON.parse(new TextDecoder().decode(result.stdout));
 }

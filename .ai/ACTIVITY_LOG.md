@@ -237,3 +237,6 @@ The repository carries the memory, not the chat.
 - Extended the watcher boundary to accept stable JPEG and PNG drops. The injected normalizer produces a temporary single-page PDF, the existing production batch entrypoint receives that PDF, and the original image moves after the result. `img2pdf` is the existing system tool used by the production adapter; no dependency was added.
 - `bun test`: 114 pass, 0 fail, 385 `expect()` calls across 18 files; `bun run typecheck` and `git diff --check` passed.
 - mutation check: replaced the normalized temporary PDF argument with the original image source; named test `normalizes stable JPEG/PNG files through the production-PDF adapter, cleans temporary PDFs, and preserves content-addressed duplicates` failed because expected temporary PDF paths but received original image paths. Restored exactly and reran green.
+
+## 2026-09-06 — /root — POST-STAGE-OPERABILITY FOLLOW-UP
+- Capped Codex-shim safe image filename labels at 80 characters and preserved local-model subprocess stderr in failed-command errors. `bun test` targeted mutation removed the cap: named test `caps a 250-character image label at an 80-character safe filename` failed with expected 80 characters and received the full 250-character label; restored exactly.

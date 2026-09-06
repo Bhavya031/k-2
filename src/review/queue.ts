@@ -1,5 +1,7 @@
 import { Database } from "bun:sqlite";
 
+import type { QueueDecision, QueueDocumentView, ReviewDecisionPort } from "../messaging/phone-intake.ts";
+
 export type ReviewValue =
   | Readonly<{ kind: "text"; value: string }>
   | Readonly<{ kind: "money_paise"; value: number }>
@@ -191,4 +193,71 @@ export class ReviewQueue {
     ).get(itemId) as StoredValue | null;
     return row === null ? null : { value: decodeValue(row), provenance: row.provenance };
   }
+
+  documentFor(documentId: string): Readonly<{ id: string; documentId: string; decisionPrompt: string }> | null {
+    const row = this.database.query(`
+      SELECT id, subject_id, decision_prompt
+      FROM review_items
+      WHERE subject_id = ? AND state IN ('pending', 'claimed')
+      ORDER BY priority DESC, created_at ASC, id ASC
+      LIMIT 1
+    `).get(documentId) as { id: string; subject_id: string; decision_prompt: string } | null;
+    return row === null ? null : { id: row.id, documentId: row.subject_id, decisionPrompt: row.decision_prompt };
+  }
+}
+
+/**
+ * Adapts the persistent queue to the phone surface without giving transport code
+ * direct database access. Each queue item exposes its single reviewed value as
+ * `value`; a phone correction therefore cannot alter unrelated extracted facts.
+ */
+export class ReviewQueuePhoneAdapter implements ReviewDecisionPort {
+  constructor(
+    private readonly queue: ReviewQueue,
+    private readonly now: () => string = () => new Date().toISOString(),
+  ) {}
+
+  async readDocument(documentId: string): Promise<QueueDocumentView | undefined> {
+    const row = this.queue.documentFor(documentId);
+    if (row === null) return undefined;
+
+    const stored = this.queue.valueFor(row.id);
+    const values: Record<string, string> = stored === null ? {} : { value: String(stored.value.value) };
+    return Object.freeze({
+      reviewItemId: row.id,
+      documentId: row.documentId,
+      documentType: "review_item",
+      values: Object.freeze(values),
+      reviewReason: row.decisionPrompt,
+    });
+  }
+
+  async decide(decision: QueueDecision): Promise<void> {
+    const decidedAt = this.now();
+    if (decision.kind === "approve" || decision.kind === "reject") {
+      this.queue.decide(decision.reviewItemId, {
+        outcome: decision.kind,
+        decidedBy: decision.actorId,
+        decidedAt,
+      });
+      return;
+    }
+    if (decision.field !== "value") throw new Error("phone corrections may replace only the queued value");
+    const existing = this.queue.valueFor(decision.reviewItemId);
+    if (existing === null) throw new Error("a correction needs an extracted value to replace");
+    this.queue.decide(decision.reviewItemId, {
+      outcome: "correct",
+      correctedValue: phoneValue(existing.value.kind, decision.value),
+      decidedBy: decision.actorId,
+      decidedAt,
+    });
+  }
+}
+
+function phoneValue(kind: ReviewValue["kind"], value: string): ReviewValue {
+  if (kind === "text") return { kind, value };
+  if (!/^-?\d+$/.test(value)) throw new Error("numeric phone corrections must be integer units");
+  const integer = Number(value);
+  if (!Number.isSafeInteger(integer)) throw new Error("numeric phone corrections must be safe integers");
+  return { kind, value: integer } as ReviewValue;
 }

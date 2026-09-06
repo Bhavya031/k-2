@@ -147,3 +147,6 @@ The repository carries the memory, not the chat.
 - implementation commit 44947b988409bfd8b331816967b9376523095f1f; fake-transport phone intake, Stage 3 ingestion port, localized review surface, single-value correction prompt, and injected queue-decision port landed.
 - `bun test`: 60 pass, 0 fail, 181 expect() calls across 9 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: replaced the configured-token gate with `if (true)`; four Stage 5 tests failed, including `routes an allowed synthetic photograph to the Stage 3 ingestion port and presents its classified review document` with expected `{ available: true }`, received `{ available: false }`; restored exactly and reran green.
+
+## 2026-09-06 17:30 IST — /root — START STAGE-5-INTEGRATION
+- Wiring the merged phone decision port to the existing local review queue and adding a real end-to-end synthetic test.

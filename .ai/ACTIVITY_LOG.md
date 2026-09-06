@@ -200,6 +200,6 @@ The repository carries the memory, not the chat.
 - Building post-stage end-to-end batch composition using the merged production ingestion, segmentation, extraction, ledger, matching, payment, and report-facing store paths.
 
 ## 2026-09-06 00:00 IST — /root — FINISH STAGE-9-COMPOSITION
-- implementation commit 127c2fa; composed the persisted production ingest/classify, segment, extract, accrual, match, and simulated payment-draft paths, with content-hash source-document linkage.
-- `bun test`: 95 pass, 0 fail, 310 expect() calls across 15 files; `bun run typecheck` and `git diff --check`: passed.
+- implementation commits a2abc77 and f64365b; composed the persisted production ingest/classify, segment, extract, accrual, match, and simulated payment-draft paths, with content-hash source-document linkage.
+- `bun test`: 102 pass, 0 fail, 338 expect() calls across 16 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: removed the `ThreeWayMatcher.run` handoff; both named Stage 9 E2E tests failed, including expected accrual status `invoiced`, received `incurred`; restored exactly and reran green.

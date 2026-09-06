@@ -10,7 +10,7 @@ const dateOnly = (column: string): string => `
   AND date(${column}, '+0 days') = ${column}
 `;
 
-const STORE_SCHEMA_VERSION = 2;
+const STORE_SCHEMA_VERSION = 3;
 
 /**
  * Applies the Stage 1 store schema. It is safe to invoke at every startup.
@@ -20,7 +20,18 @@ const STORE_SCHEMA_VERSION = 2;
 export function migrateStore(database: Database): void {
   database.exec("PRAGMA foreign_keys = ON;");
 
+  // Stage 6 reserved this table before matching had a persisted score/variance
+  // shape. It never wrote match rows, so fail loudly rather than silently
+  // inventing facts if an unexpected pre-Stage-7 row is encountered.
+  const oldMatchColumns = database.query("PRAGMA table_info(accrual_matches)").all() as Array<{ name: string }>;
+  const rebuildMatches = oldMatchColumns.length > 0 && !oldMatchColumns.some(({ name }) => name === "score_basis_points");
+  if (rebuildMatches) {
+    const oldMatchCount = database.query("SELECT count(*) AS count FROM accrual_matches").get() as { count: number };
+    if (oldMatchCount.count !== 0) throw new Error("cannot migrate populated pre-Stage-7 accrual matches without their score and signed variance facts");
+  }
+
   database.transaction(() => {
+    if (rebuildMatches) database.exec("ALTER TABLE accrual_matches RENAME TO accrual_matches_stage6;");
     database.exec(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version INTEGER PRIMARY KEY CHECK (typeof(version) = 'integer'),
@@ -159,7 +170,14 @@ export function migrateStore(database: Database): void {
         id TEXT PRIMARY KEY,
         accrual_id TEXT NOT NULL UNIQUE REFERENCES accruals(id),
         invoice_source_document_id TEXT NOT NULL UNIQUE REFERENCES source_documents(id),
-        status TEXT NOT NULL CHECK (status IN ('proposed', 'confirmed', 'rejected')),
+        score_basis_points INTEGER NOT NULL CHECK (
+          typeof(score_basis_points) = 'integer' AND score_basis_points BETWEEN 0 AND 10000
+        ),
+        variance_paise INTEGER NOT NULL CHECK (typeof(variance_paise) = 'integer'),
+        variance_cause TEXT CHECK (variance_cause IS NULL OR variance_cause IN (
+          'quantity_variance', 'rate_variance', 'cause_unknown'
+        )),
+        status TEXT NOT NULL CHECK (status IN ('exact', 'within_tolerance', 'variance')),
         matched_on TEXT NOT NULL CHECK (${dateOnly("matched_on")})
       ) STRICT;
 
@@ -184,5 +202,6 @@ export function migrateStore(database: Database): void {
       INSERT OR IGNORE INTO schema_migrations (version, applied_on)
       VALUES (${STORE_SCHEMA_VERSION}, '2026-09-06');
     `);
+    if (rebuildMatches) database.exec("DROP TABLE accrual_matches_stage6;");
   })();
 }

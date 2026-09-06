@@ -172,3 +172,7 @@ The repository carries the memory, not the chat.
 - mutation check: changed integer floor division to round-half-up by adding `500n` before division; `uses one integer floor division for pricing, including remainders on both sides of half a paise` failed: expected `155808`, received `155809`; restored exactly and reran green.
 
 - 2026-09-06 — Stage 6 merged: PR #12 (db34e88, 00cf902); final `bun test` 76 pass, 0 fail, 240 `expect()` calls across 12 files; `bun run typecheck` passed. Stage 7 is next.
+
+- 2026-09-06 — Stage 7 Piece A START: deterministic three-way matching.
+- 2026-09-06 — Stage 7 Piece A FINISH: `bun test` 84 pass, 0 fail, 256 `expect()` calls across 13 files; `bun run typecheck` passed; `git diff --check` passed. Mutation: replaced signed invoice-accrual variance with `Math.abs`; named signed-variance test failed with expected `-1000`, received `1000`; restored and reran green.
+- 2026-09-06 — Stage 7 Piece A review follow-up: added vendor-name gate boundaries (MALIYADHARA/MALIADHARA, five-character floor, distance three); `bun test` 87 pass, 0 fail, 259 `expect()` calls across 13 files; `bun run typecheck` and `git diff --check` passed.

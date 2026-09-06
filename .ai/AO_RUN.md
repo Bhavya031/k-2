@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — seeded, nothing built.
+Last updated: 2026-09-06 — Stage 1 merged; Stage 2 next.
 
 ---
 
@@ -25,9 +25,9 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** none started.
-**Main:** seed commit only — specification, rules, task board, demo inputs.
-**Suite on main:** no tests exist yet.
+**Stage:** Stage 1 merged. Stage 2 next.
+**Main:** Stage 1 merged — project skeleton, configuration, value types, and store.
+**Suite on main:** 32 pass, 0 fail, 79 expect() calls across 4 files; typecheck clean.
 **Blocking:** nothing.
 
 **Open question the human has not answered:** the agreed rate per tonne for the
@@ -40,7 +40,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
-| 1 | Foundation | DISPATCHED | #3, #2, and #4 merged; #1 integrating | 17e2a27 | 26 pass, 0 fail |
+| 1 | Foundation | MERGED | PRs #3, #2, #4, #1 | 28e5e23, 1e12ef4, 17e2a27, d2551fc | 32 pass, 0 fail; 79 expect() calls / 4 files; typecheck clean |
 | 2 | Model boundary | TODO | | | |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |

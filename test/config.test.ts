@@ -58,9 +58,10 @@ describe("loadConfig", () => {
       MESSAGING_BOT_TOKEN: "synthetic-bot-token",
       MESSAGING_ALLOWED_SENDERS: "synthetic-driver-1, synthetic-driver-2, synthetic-driver-1",
       BOUNDARY_MODEL: "synthetic-boundary-model",
-      GMAIL_CLIENT_ID: "synthetic-client-id",
-      GMAIL_CLIENT_SECRET: "synthetic-client-secret",
-      GMAIL_REFRESH_TOKEN: "synthetic-refresh-token",
+      CLIENT_ID: "synthetic-client-id",
+      CLIENT_SECRET: "synthetic-client-secret",
+      REFRESH_TOKEN: "synthetic-refresh-token",
+      RAZORPAYX_COMPANY_ACCOUNT_NUMBER: "SIMULATED COMPANY ACCOUNT",
     });
 
     expect(config.modelMaxConcurrency).toBe(4);
@@ -69,6 +70,8 @@ describe("loadConfig", () => {
     expect(config.gmailIntake).toEqual({ clientId: "synthetic-client-id", clientSecret: "synthetic-client-secret", refreshToken: "synthetic-refresh-token" });
     expect(Object.isFrozen(config.messaging)).toBe(true);
     expect(Object.isFrozen(config.gmailIntake)).toBe(true);
+    expect(config.razorpayX).toEqual({ companyAccountNumber: "SIMULATED COMPANY ACCOUNT" });
+    expect(Object.isFrozen(config.razorpayX)).toBe(true);
   });
 
   test("leaves optional capabilities absent when their keys are missing", () => {
@@ -78,6 +81,7 @@ describe("loadConfig", () => {
     expect("messaging" in config).toBe(false);
     expect("boundaryModel" in config).toBe(false);
     expect("gmailIntake" in config).toBe(false);
+    expect("razorpayX" in config).toBe(false);
   });
 
   test("names a missing required database key", () => {
@@ -124,7 +128,7 @@ describe("loadConfig", () => {
   });
 
   test("requires every Gmail intake credential once any Gmail intake key is configured", () => {
-    expect(() => loadConfig({ ...baseEnvironment, GMAIL_CLIENT_ID: "synthetic-client-id" })).toThrow("GMAIL_CLIENT_SECRET");
+    expect(() => loadConfig({ ...baseEnvironment, CLIENT_ID: "synthetic-client-id" })).toThrow("CLIENT_SECRET");
   });
 
 });

@@ -24,6 +24,8 @@ export type GmailIntakeConfiguration = Readonly<{
   refreshToken: string;
 }>;
 
+export type RazorpayXConfiguration = Readonly<{ companyAccountNumber: string }>;
+
 export type AppConfig = Readonly<{
   databasePath: string;
   model: ModelConfiguration;
@@ -31,6 +33,7 @@ export type AppConfig = Readonly<{
   messaging?: MessagingConfiguration;
   gmailIntake?: GmailIntakeConfiguration;
   boundaryModel?: string;
+  razorpayX?: RazorpayXConfiguration;
 }>;
 
 let startupConfig: AppConfig | undefined;
@@ -113,14 +116,14 @@ function parseAllowedSenders(environment: Environment): readonly string[] {
 }
 
 function parseGmailIntake(environment: Environment): GmailIntakeConfiguration | undefined {
-  const clientId = optional(environment, "GMAIL_CLIENT_ID");
-  const clientSecret = optional(environment, "GMAIL_CLIENT_SECRET");
-  const refreshToken = optional(environment, "GMAIL_REFRESH_TOKEN");
+  const clientId = optional(environment, "CLIENT_ID");
+  const clientSecret = optional(environment, "CLIENT_SECRET");
+  const refreshToken = optional(environment, "REFRESH_TOKEN");
   if (clientId === undefined && clientSecret === undefined && refreshToken === undefined) return undefined;
   return Object.freeze({
-    clientId: clientId ?? required(environment, "GMAIL_CLIENT_ID"),
-    clientSecret: clientSecret ?? required(environment, "GMAIL_CLIENT_SECRET"),
-    refreshToken: refreshToken ?? required(environment, "GMAIL_REFRESH_TOKEN"),
+    clientId: clientId ?? required(environment, "CLIENT_ID"),
+    clientSecret: clientSecret ?? required(environment, "CLIENT_SECRET"),
+    refreshToken: refreshToken ?? required(environment, "REFRESH_TOKEN"),
   });
 }
 
@@ -128,6 +131,7 @@ function parseConfig(environment: Environment): AppConfig {
   const modelMaxConcurrency = parseConcurrency(environment);
   const botToken = optional(environment, "MESSAGING_BOT_TOKEN");
   const boundaryModel = optional(environment, "BOUNDARY_MODEL");
+  const razorpayXCompanyAccountNumber = optional(environment, "RAZORPAYX_COMPANY_ACCOUNT_NUMBER");
   const allowedSenders = parseAllowedSenders(environment);
   const gmailIntake = parseGmailIntake(environment);
 
@@ -140,6 +144,9 @@ function parseConfig(environment: Environment): AppConfig {
       : { messaging: Object.freeze({ botToken, allowedSenders }) }),
     ...(gmailIntake === undefined ? {} : { gmailIntake }),
     ...(boundaryModel === undefined ? {} : { boundaryModel }),
+    ...(razorpayXCompanyAccountNumber === undefined
+      ? {}
+      : { razorpayX: Object.freeze({ companyAccountNumber: razorpayXCompanyAccountNumber }) }),
   });
 }
 

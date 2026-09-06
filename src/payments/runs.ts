@@ -107,7 +107,7 @@ export class PaymentRuns {
     for (const candidate of candidates) grouped.set(candidate.vendor_id, [...(grouped.get(candidate.vendor_id) ?? []), candidate]);
     const held: HeldVendor[] = [];
     const instructions: PaymentInstruction[] = [];
-    const lines: Array<{ line: Line; status: "draft" | "held" }> = [];
+    const lines: Array<{ line: Line; status: "draft" | "held"; accountNumber: string | null; ifsc: string | null }> = [];
 
     for (const [vendorId, vendorCandidates] of grouped) {
       const vendorLines = vendorCandidates.map(calculatedLine);
@@ -118,7 +118,12 @@ export class PaymentRuns {
       else if (!nonEmpty(first.beneficiary_ifsc)) reason = "missing beneficiary IFSC from extracted vendor invoice data";
       else if (vendorLines.some((line) => line.netPaise <= 0)) reason = "nonpositive net payable";
       const status = reason === undefined ? "draft" : "held";
-      for (const line of vendorLines) lines.push({ line, status });
+      for (const line of vendorLines) lines.push({
+        line,
+        status,
+        accountNumber: status === "draft" ? first.beneficiary_account_number : null,
+        ifsc: status === "draft" ? first.beneficiary_ifsc : null,
+      });
       if (reason !== undefined) {
         held.push({ vendorId, reason, reviewItemId: `payment-held:${run.id}:${vendorId}` });
         continue;
@@ -132,9 +137,9 @@ export class PaymentRuns {
 
     this.database.transaction(() => {
       this.database.run("INSERT INTO payment_runs (id, run_on, reference, status) VALUES (?, ?, ?, 'draft')", [run.id, run.runOn, reference]);
-      for (const { line, status } of lines) this.database.run(
-        "INSERT INTO payment_run_lines (id, payment_run_id, accrual_id, gross_paise, tds_paise, retention_paise, net_paise, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [`payment-line:${run.id}:${line.accrualId}`, run.id, line.accrualId, line.grossPaise, line.tdsPaise, line.retentionPaise, line.netPaise, status],
+      for (const { line, status, accountNumber, ifsc } of lines) this.database.run(
+        "INSERT INTO payment_run_lines (id, payment_run_id, accrual_id, gross_paise, tds_paise, retention_paise, net_paise, beneficiary_account_number, beneficiary_ifsc, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [`payment-line:${run.id}:${line.accrualId}`, run.id, line.accrualId, line.grossPaise, line.tdsPaise, line.retentionPaise, line.netPaise, accountNumber, ifsc, status],
       );
       for (const item of held) this.enqueueHold(item, run.reviewedAt);
     })();

@@ -36,6 +36,7 @@ You do not write product code.
 
 ## Stage status
 
+
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
 | 1 | Foundation | MERGED | PRs #3, #2, #4, #1 | 28e5e23, 1e12ef4, 17e2a27, d2551fc | 32 pass, 0 fail; 79 expect() calls / 4 files; typecheck clean |
@@ -44,7 +45,7 @@ You do not write product code.
 | 4 | Segment and extract | MERGED | PRs #7, #8 | 912fd71, 246b875 | 54 pass, 0 fail; 162 expect() calls / 8 files; typecheck clean |
 | 5 | Review queue and intake + Gmail security follow-up | REVIEW | feat/gmail-intake | follow-up pending | 163 pass, 0 fail; 552 expect() calls / 22 files; typecheck clean |
 | 6 | Ledger and accruals | MERGED | PR #12 | db34e88, 00cf902 | 76 pass, 0 fail; 240 expect() calls / 12 files; typecheck clean |
-| 7 | Match and payment run | MERGED | PRs #14, #13 | a486e58 | 93 pass, 0 fail; 286 expect() calls / 14 files; typecheck clean |
+| 7 | Match and payment run + RazorpayX security follow-up | REVIEW | ao/k-2-30/razorpayx-security | PR #29 follow-up | 168 pass, 0 fail; 600 expect() calls / 22 files; typecheck clean |
 | 8 | The report page | REVIEW | ao/k-2-23/report-page | 1addcc5 | 99 pass, 0 fail; 313 expect() calls / 15 files; typecheck clean |
 
 Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.

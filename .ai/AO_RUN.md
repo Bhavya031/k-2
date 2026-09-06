@@ -46,7 +46,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 | 4 | Segment and extract | MERGED | PRs #7, #8 | 912fd71, 246b875 | 54 pass, 0 fail; 162 expect() calls / 8 files; typecheck clean |
 | 5 | Review queue and intake | MERGED | PRs #10, #9, #11 | d2e2f49 | 68 pass, 0 fail; 203 expect() calls / 11 files; typecheck clean |
 | 6 | Ledger and accruals | MERGED | PR #12 | db34e88, 00cf902 | 76 pass, 0 fail; 240 expect() calls / 12 files; typecheck clean |
-| 7 | Match and payment run | REVIEW | ao/k-2-21/stage7-piece-a | pending | 84 pass, 0 fail; 256 expect() calls / 13 files; typecheck clean |
+| 7 | Match and payment run | REVIEW | PR #14 merged; ao/k-2-22/payment-runs | pending | 87 pass, 0 fail; 259 expect() calls / 13 files; typecheck clean |
 | 8 | The report page | TODO | | | |
 
 Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.

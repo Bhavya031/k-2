@@ -129,12 +129,15 @@ export function migrateStore(database: Database): void {
           typeof(rate_paise_per_tonne) = 'integer' AND rate_paise_per_tonne >= 0
         ),
         effective_on TEXT NOT NULL CHECK (${dateOnly("effective_on")}),
-        tds_section TEXT NOT NULL CHECK (length(trim(tds_section)) > 0),
-        tds_rate_basis_points INTEGER NOT NULL CHECK (
+        tds_section TEXT NOT NULL DEFAULT '194C' CHECK (length(trim(tds_section)) > 0),
+        tds_rate_basis_points INTEGER NOT NULL DEFAULT 200 CHECK (
           typeof(tds_rate_basis_points) = 'integer' AND tds_rate_basis_points BETWEEN 0 AND 10000
         ),
-        retention_basis_points INTEGER NOT NULL CHECK (
+        retention_basis_points INTEGER NOT NULL DEFAULT 500 CHECK (
           typeof(retention_basis_points) = 'integer' AND retention_basis_points BETWEEN 0 AND 10000
+        ),
+        tds_threshold_paise INTEGER NOT NULL DEFAULT 3000000 CHECK (
+          typeof(tds_threshold_paise) = 'integer' AND tds_threshold_paise >= 0
         ),
         payment_days INTEGER NOT NULL CHECK (typeof(payment_days) = 'integer' AND payment_days >= 0),
         beneficiary_name TEXT,
@@ -184,7 +187,9 @@ export function migrateStore(database: Database): void {
       CREATE TABLE IF NOT EXISTS payment_runs (
         id TEXT PRIMARY KEY,
         run_on TEXT NOT NULL CHECK (${dateOnly("run_on")} ),
-        status TEXT NOT NULL CHECK (status IN ('draft', 'review', 'simulated', 'voided'))
+        reference TEXT,
+        notes TEXT,
+        status TEXT NOT NULL CHECK (status IN ('draft', 'review', 'simulated', 'executed_simulated', 'failed', 'voided'))
       ) STRICT;
 
       CREATE TABLE IF NOT EXISTS payment_run_lines (
@@ -195,13 +200,26 @@ export function migrateStore(database: Database): void {
         tds_paise INTEGER NOT NULL CHECK (typeof(tds_paise) = 'integer' AND tds_paise >= 0),
         retention_paise INTEGER NOT NULL CHECK (typeof(retention_paise) = 'integer' AND retention_paise >= 0),
         net_paise INTEGER NOT NULL CHECK (typeof(net_paise) = 'integer'),
-        status TEXT NOT NULL CHECK (status IN ('draft', 'approved', 'held', 'voided')),
+        status TEXT NOT NULL CHECK (status IN ('draft', 'approved', 'held', 'executed_simulated', 'voided')),
         CHECK (net_paise = gross_paise - tds_paise - retention_paise)
       ) STRICT;
 
       INSERT OR IGNORE INTO schema_migrations (version, applied_on)
       VALUES (${STORE_SCHEMA_VERSION}, '2026-09-06');
     `);
+    // Piece A rebuilds its Stage 6 placeholder before Piece B extends terms/runs.
     if (rebuildMatches) database.exec("DROP TABLE accrual_matches_stage6;");
+    const columns = (table: string): Set<string> => new Set(
+      (database.query(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map(({ name }) => name),
+    );
+    const vendorTermsColumns = columns("vendor_terms");
+    if (!vendorTermsColumns.has("tds_threshold_paise")) {
+      database.exec(`ALTER TABLE vendor_terms ADD COLUMN tds_threshold_paise INTEGER NOT NULL DEFAULT 3000000 CHECK (
+        typeof(tds_threshold_paise) = 'integer' AND tds_threshold_paise >= 0
+      )`);
+    }
+    const paymentRunColumns = columns("payment_runs");
+    if (!paymentRunColumns.has("reference")) database.exec("ALTER TABLE payment_runs ADD COLUMN reference TEXT");
+    if (!paymentRunColumns.has("notes")) database.exec("ALTER TABLE payment_runs ADD COLUMN notes TEXT");
   })();
 }

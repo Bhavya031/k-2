@@ -1,0 +1,26 @@
+.DS_Store
+*.swp
+*~
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs, coverage, generated output
+*.log
+coverage/
+dashboard.html
+demo-output.html
+
+# Runtime data — never source
+/data/
+.data/
+tmp/
+
+# Toolchain
+node_modules/
+.bun/
+*.tsbuildinfo
+dist/
+build/

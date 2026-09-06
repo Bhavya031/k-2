@@ -249,3 +249,6 @@ The repository carries the memory, not the chat.
 - Telegram long-poll adapter deposits allowed photo/PDF/image bytes in the watcher intake folder with bounded poll/download retries, offset deduplication, one acknowledgement, and no pipeline/database invocation.
 - `bun test`: 114 pass, 0 fail, 379 expect() calls across 18 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: disabled the stored-offset redelivery guard; `persists offset so redelivered updates are not processed again` failed exactly: expected length 1, received length 2. Restored byte-for-byte and reran green.
+
+## 2026-09-06 — /root — START MAINTENANCE-REBASING
+- Hardening filename and local-model diagnostics before rebasing the active intake and messaging PRs onto main.

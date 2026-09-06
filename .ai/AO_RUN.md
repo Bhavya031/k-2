@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 7 merged; Stage 8 claimed for report-page.
+Last updated: 2026-09-06 — Stage 8 ready for review.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Stage 8 — The report page — claimed.
+**Stage:** Stage 8 — The report page — ready for review.
 **Main:** Stages 1–7 merged — foundation through matching and simulated payment runs.
 **Suite on main:** 93 pass, 0 fail, 286 expect() calls across 14 files; typecheck clean.
 **Blocking:** nothing.
@@ -43,7 +43,7 @@ You do not write product code.
 | 5 | Review queue and intake | MERGED | PRs #10, #9, #11 | d2e2f49 | 68 pass, 0 fail; 203 expect() calls / 11 files; typecheck clean |
 | 6 | Ledger and accruals | MERGED | PR #12 | db34e88, 00cf902 | 76 pass, 0 fail; 240 expect() calls / 12 files; typecheck clean |
 | 7 | Match and payment run | MERGED | PRs #14, #13 | a486e58 | 93 pass, 0 fail; 286 expect() calls / 14 files; typecheck clean |
-| 8 | The report page | DISPATCHED | ao/k-2-23/report-page | pending | pending |
+| 8 | The report page | REVIEW | ao/k-2-23/report-page | 1addcc5 | 99 pass, 0 fail; 313 expect() calls / 15 files; typecheck clean |
 
 Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.
 

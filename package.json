@@ -12,7 +12,8 @@
     "batch": "bun src/pipeline/cli.ts",
     "ask-ledger": "bun scripts/ask-ledger.ts",
     "watch-intake": "bun src/pipeline/intake-watch-cli.ts",
-    "telegram-intake": "bun src/messaging/telegram-cli.ts"
+    "telegram-intake": "bun src/messaging/telegram-cli.ts",
+    "gmail-intake": "bun scripts/gmail-intake.ts"
   },
   "packageManager": "bun@1.4.2",
   "devDependencies": {

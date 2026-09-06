@@ -11,7 +11,8 @@
     "report": "bun run scripts/generate-report.ts",
     "batch": "bun src/pipeline/cli.ts",
     "ask-ledger": "bun scripts/ask-ledger.ts",
-    "watch-intake": "bun src/pipeline/intake-watch-cli.ts"
+    "watch-intake": "bun src/pipeline/intake-watch-cli.ts",
+    "telegram-intake": "bun src/messaging/telegram-cli.ts"
   },
   "packageManager": "bun@1.4.2",
   "devDependencies": {

@@ -240,3 +240,15 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 — /root — POST-STAGE-OPERABILITY FOLLOW-UP
 - Capped Codex-shim safe image filename labels at 80 characters and preserved local-model subprocess stderr in failed-command errors. `bun test` targeted mutation removed the cap: named test `caps a 250-character image label at an 80-character safe filename` failed with expected 80 characters and received the full 250-character label; restored exactly.
+
+
+## 2026-09-06 — /root — START TELEGRAM-MESSAGING-TRANSPORT
+- Implementing an isolated Telegram long-poll adapter that writes accepted synthetic/simulated intake bytes only to the watcher-compatible folder port; no pipeline or database calls.
+
+## 2026-09-06 — /root — FINISH TELEGRAM-MESSAGING-TRANSPORT
+- Telegram long-poll adapter deposits allowed photo/PDF/image bytes in the watcher intake folder with bounded poll/download retries, offset deduplication, one acknowledgement, and no pipeline/database invocation.
+- `bun test`: 114 pass, 0 fail, 379 expect() calls across 18 files; `bun run typecheck` and `git diff --check`: passed.
+- mutation check: disabled the stored-offset redelivery guard; `persists offset so redelivered updates are not processed again` failed exactly: expected length 1, received length 2. Restored byte-for-byte and reran green.
+
+## 2026-09-06 — /root — START MAINTENANCE-REBASING
+- Hardening filename and local-model diagnostics before rebasing the active intake and messaging PRs onto main.

@@ -269,3 +269,10 @@ The repository carries the memory, not the chat.
 - Added one exported per-type field list shared by raw-field validation and strict structured-output schema construction. Every schema field is required and nullable; explicit null values are omitted before facts are attached without changing string, quantity, money, list, tax, or bank-detail handling.
 - `bun test --timeout 30000`: 141 pass, 0 fail, 521 `expect()` calls across 21 files; `bun x --package typescript@5.9.2 tsc --noEmit` and `git diff --check`: passed.
 - mutation check: removed `vehicle` from the shared `royalty_pass` field list; `publishes every royalty-pass field as a required nullable string` failed with the exact diff showing `-   "vehicle",`. Restored the field exactly and reran green.
+## 2026-09-06 — /root — START PRINTED-DATE-CONVERTER
+- Adding exact printed Indian date normalisation for the extraction-to-pipeline boundary; invalid dates remain reviewable rather than guessed.
+
+## 2026-09-06 — /root — FINISH PRINTED-DATE-CONVERTER
+- Added `printedDateToIso`: exact Indian day-first and ISO date conversion with Date round-trip validation; trailing printed times are ignored. The batch pipeline normalizes both delivery and supplier-invoice dates before ISO-only ledger/matching writes.
+- `bun test --timeout 30000`: 152 pass, 0 fail, 482 `expect()` calls across 21 files; `bun x --package typescript@5.9.2 tsc --noEmit` and `git diff --check`: passed.
+- mutation check: swapped the day and month positions in the printed-date ISO construction. Named test `chooses the day-first reading for an ambiguous printed date` failed exactly: expected `"2026-06-05"`, received `"2026-05-06"`. Restored byte-for-byte and reran green.

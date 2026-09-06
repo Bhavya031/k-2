@@ -4,6 +4,7 @@ import {
   extractPageFields,
   extractionFields,
   printedAmountToPaise,
+  printedDateToIso,
   printedKilogramsToQuantity,
   resolveFieldValues,
   rollExtractedPages,
@@ -146,6 +147,62 @@ describe("Stage 4 field extraction", () => {
     expect(printedKilogramsToQuantity("12,420.5 kg")).toBeUndefined();
     expect(Number(printedAmountToPaise("INR 3,001.05"))).toBe(300_105);
     expect(printedAmountToPaise("3,001.057")).toBeUndefined();
+  });
+
+  test("converts a slash-separated printed day-first date", () => {
+    expect(printedDateToIso("18/07/2026")).toBe("2026-07-18");
+  });
+
+  test("converts a hyphen-separated printed day-first date", () => {
+    expect(printedDateToIso("18-07-2026")).toBe("2026-07-18");
+  });
+
+  test("converts a dot-separated printed day-first date", () => {
+    expect(printedDateToIso("18.07.2026")).toBe("2026-07-18");
+  });
+
+  test("ignores a printed trailing AM time", () => {
+    expect(printedDateToIso("18/07/2026 09:21 AM")).toBe("2026-07-18");
+  });
+
+  test("ignores a printed trailing 24-hour time", () => {
+    expect(printedDateToIso("18/07/2026 09:14")).toBe("2026-07-18");
+  });
+
+  test("returns an already-ISO printed date unchanged", () => {
+    expect(printedDateToIso("2026-07-18")).toBe("2026-07-18");
+  });
+
+  test("chooses the day-first reading for an ambiguous printed date", () => {
+    expect(printedDateToIso("05/06/2026")).toBe("2026-06-05");
+  });
+
+  test("rejects month-first printed input", () => {
+    expect(printedDateToIso("07/18/2026")).toBeUndefined();
+  });
+
+  test("rejects a printed date with a two-digit year", () => {
+    expect(printedDateToIso("18/07/26")).toBeUndefined();
+  });
+
+  test("rejects impossible 31 February printed date", () => {
+    expect(printedDateToIso("31/02/2026")).toBeUndefined();
+  });
+
+  test("rejects a printed date with a day beyond 31", () => {
+    expect(printedDateToIso("32/01/2026")).toBeUndefined();
+  });
+
+  test("rejects an empty printed date", () => {
+    expect(printedDateToIso("")).toBeUndefined();
+  });
+
+  test("rejects a printed date with an unsupported trailing value", () => {
+    expect(printedDateToIso("18/07/2026 09:14:00")).toBeUndefined();
+  });
+
+  test("rejects a non-string printed date", () => {
+    expect(printedDateToIso(20260718)).toBeUndefined();
   });
 
   test("extracts the typed delivery challan, supplier invoice bank details and tender-notice fields", async () => {

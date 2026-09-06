@@ -157,6 +157,21 @@ export function printedAmountToPaise(value: unknown): Money | undefined {
   return checked.ok ? checked.value : undefined;
 }
 
+/** Converts a printed Indian day-first date to a validated ISO date-only string. */
+export function printedDateToIso(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const printed = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(printed)) {
+    const date = new Date(`${printed}T00:00:00.000Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === printed ? printed : undefined;
+  }
+  const match = /^(\d{2})([/.-])(\d{2})\2(\d{4})(?:\s+(?:(?:0[1-9]|1[0-2]):[0-5]\d\s+[AP]M|(?:[01]\d|2[0-3]):[0-5]\d))?$/i.exec(printed);
+  if (match === null) return undefined;
+  const iso = `${match[4]}-${match[3]}-${match[1]}`;
+  const date = new Date(`${iso}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : undefined;
+}
+
 function optionalQuantity(input: Record<string, unknown>, key: string, errors: ValidationIssue[]): Quantity | undefined {
   const value = input[key];
   if (value === undefined || value === null) return undefined;

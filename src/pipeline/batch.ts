@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 
 import type { AppConfig } from "../config.ts";
-import { extractPageFields, resolveFieldValues, rollExtractedPages, type ExtractionDocumentType, type RolledDocument } from "../extract/extract.ts";
+import { extractPageFields, printedDateToIso, resolveFieldValues, rollExtractedPages, type ExtractionDocumentType, type RolledDocument } from "../extract/extract.ts";
 import { ingestPdf, type IngestResult, type PdfRenderer } from "../ingest/ingest.ts";
 import { AccrualLedger, DELIVERY_DATA_REVIEW_PRIORITY, saveExtractedSupplierBankDetails } from "../ledger/accruals.ts";
 import { ThreeWayMatcher, type MatchResult, type SupplierInvoiceForMatch } from "../matching/match.ts";
@@ -56,11 +56,6 @@ const EXTRACTION_TYPES: Readonly<Record<string, ExtractionDocumentType | undefin
 
 function sourceDocumentId(segment: SegmentedDocument): string {
   return `source:${segment.sourceSha256}:${segment.firstPage}:${segment.lastPage}`;
-}
-
-function dateOnly(value: string | undefined): string | undefined {
-  if (value === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(value) || new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) !== value) return undefined;
-  return value;
 }
 
 function pagesForSegment(database: Database, segment: SegmentedDocument): readonly StoredPage[] {
@@ -145,7 +140,7 @@ function accrueDelivery(ledger: AccrualLedger, database: Database, id: string, e
   const printedAmount = royalty ? field(extracted, "amount") : undefined;
   return ledger.accrue({ id: `accrual:${id}`, sourceDocumentId: id, vendorId,
     paperReference: typeof reference === "string" ? reference : undefined,
-    incurredOn: dateOnly(typeof incurredOn === "string" ? incurredOn : undefined),
+    incurredOn: printedDateToIso(incurredOn),
     quantityThousandths: typeof quantity === "number" ? quantity : undefined,
     printedAmountPaise: typeof printedAmount === "number" ? printedAmount : undefined,
     extractionConfidenceBasisPoints: 10_000, reviewedAt });
@@ -156,7 +151,8 @@ function supplierInvoice(database: Database, id: string, extracted: RolledDocume
   const vendorName = field(extracted, "vendor");
   const invoiceDate = field(extracted, "invoiceDate");
   const amount = field(extracted, "amount");
-  if (typeof vendorName !== "string" || typeof invoiceDate !== "string" || typeof amount !== "number" || dateOnly(invoiceDate) === undefined) return undefined;
+  const normalizedInvoiceDate = printedDateToIso(invoiceDate);
+  if (typeof vendorName !== "string" || typeof invoiceDate !== "string" || typeof amount !== "number" || normalizedInvoiceDate === undefined) return undefined;
   const vendorId = exactVendorId(database, vendorName);
   if (vendorId !== undefined) {
     database.run("UPDATE source_documents SET vendor_id = ? WHERE id = ?", [vendorId, id]);
@@ -165,7 +161,7 @@ function supplierInvoice(database: Database, id: string, extracted: RolledDocume
   }
   const reference = field(extracted, "invoiceNumber");
   return { id: `invoice:${id}`, sourceDocumentId: id, documentType: "supplier_invoice", vendorId, vendorName,
-    invoiceReference: typeof reference === "string" ? reference : undefined, invoiceDate, amountPaise: amount };
+    invoiceReference: typeof reference === "string" ? reference : undefined, invoiceDate: normalizedInvoiceDate, amountPaise: amount };
 }
 
 /**

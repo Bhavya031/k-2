@@ -131,3 +131,6 @@ The repository carries the memory, not the chat.
 
 
 - 2026-09-06 — Stage 4 integration merged: PR #7 segmentation (912fd71) and PR #8 extraction (246b875); final `bun test` 54 pass, 0 fail, 162 `expect()` calls across 8 files; `bun run typecheck` passed; `git diff --check` passed. Stage 5 is next; no Stage 5 work dispatched.
+
+## 2026-09-06 17:00 IST — /root — START STAGE-5-QUEUE-A
+- Building only review-queue persistence and API: deterministic priority ordering, atomic claims, audited decisions, and human corrections using synthetic fixtures.

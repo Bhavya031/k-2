@@ -62,6 +62,56 @@ export function migrateStore(database: Database): void {
         status TEXT NOT NULL CHECK (status IN ('draft', 'approved', 'voided'))
       ) STRICT;
 
+      CREATE TABLE IF NOT EXISTS review_items (
+        id TEXT PRIMARY KEY,
+        subject_id TEXT NOT NULL,
+        decision_prompt TEXT NOT NULL,
+        evidence TEXT NOT NULL,
+        priority INTEGER NOT NULL CHECK (typeof(priority) = 'integer'),
+        created_at TEXT NOT NULL,
+        state TEXT NOT NULL CHECK (state IN ('pending', 'claimed', 'decided')),
+        claimed_by TEXT,
+        claimed_at TEXT,
+        decision_outcome TEXT CHECK (decision_outcome IN ('approve', 'correct', 'reject')),
+        decided_by TEXT,
+        decided_at TEXT,
+        CHECK ((state = 'pending' AND claimed_by IS NULL AND claimed_at IS NULL AND decision_outcome IS NULL AND decided_by IS NULL AND decided_at IS NULL)
+          OR (state = 'claimed' AND claimed_by IS NOT NULL AND claimed_at IS NOT NULL AND decision_outcome IS NULL AND decided_by IS NULL AND decided_at IS NULL)
+          OR (state = 'decided' AND claimed_by IS NOT NULL AND claimed_at IS NOT NULL AND decision_outcome IS NOT NULL AND decided_by IS NOT NULL AND decided_at IS NOT NULL))
+      ) STRICT;
+
+      CREATE TABLE IF NOT EXISTS review_values (
+        review_item_id TEXT PRIMARY KEY REFERENCES review_items(id),
+        value_kind TEXT NOT NULL CHECK (value_kind IN ('text', 'money_paise', 'quantity_thousandths', 'rate_basis_points')),
+        value_text TEXT,
+        value_integer INTEGER,
+        provenance TEXT NOT NULL CHECK (provenance IN ('automated', 'human')),
+        CHECK ((value_kind = 'text' AND value_text IS NOT NULL AND value_integer IS NULL)
+          OR (value_kind = 'money_paise' AND value_text IS NULL AND typeof(value_integer) = 'integer')
+          OR (value_kind = 'quantity_thousandths' AND value_text IS NULL AND typeof(value_integer) = 'integer' AND value_integer >= 0)
+          OR (value_kind = 'rate_basis_points' AND value_text IS NULL AND typeof(value_integer) = 'integer' AND value_integer >= 0 AND value_integer <= 10000))
+      ) STRICT;
+
+      CREATE TABLE IF NOT EXISTS review_decision_audit (
+        id INTEGER PRIMARY KEY,
+        review_item_id TEXT NOT NULL REFERENCES review_items(id),
+        outcome TEXT NOT NULL CHECK (outcome IN ('approve', 'correct', 'reject')),
+        corrected_value_kind TEXT CHECK (corrected_value_kind IN ('text', 'money_paise', 'quantity_thousandths', 'rate_basis_points')),
+        corrected_value_text TEXT,
+        corrected_value_integer INTEGER,
+        decided_by TEXT NOT NULL,
+        decided_at TEXT NOT NULL,
+        CHECK ((outcome = 'correct' AND corrected_value_kind IS NOT NULL
+          AND ((corrected_value_kind = 'text' AND corrected_value_text IS NOT NULL AND corrected_value_integer IS NULL)
+            OR (corrected_value_kind = 'money_paise' AND corrected_value_text IS NULL AND typeof(corrected_value_integer) = 'integer')
+            OR (corrected_value_kind = 'quantity_thousandths' AND corrected_value_text IS NULL AND typeof(corrected_value_integer) = 'integer' AND corrected_value_integer >= 0)
+            OR (corrected_value_kind = 'rate_basis_points' AND corrected_value_text IS NULL AND typeof(corrected_value_integer) = 'integer' AND corrected_value_integer >= 0 AND corrected_value_integer <= 10000)))
+          OR (outcome IN ('approve', 'reject') AND corrected_value_kind IS NULL AND corrected_value_text IS NULL AND corrected_value_integer IS NULL))
+      ) STRICT;
+
+      CREATE INDEX IF NOT EXISTS review_items_claim_order
+      ON review_items (state, priority DESC, created_at ASC, id ASC);
+
       INSERT OR IGNORE INTO schema_migrations (version, applied_on)
       VALUES (${STORE_SCHEMA_VERSION}, '2026-09-06');
     `);

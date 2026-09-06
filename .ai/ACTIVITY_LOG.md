@@ -20,3 +20,6 @@ Format:
 ```
 
 The repository carries the memory, not the chat.
+
+## 2026-09-06 08:44 IST — root/Codex — START TASK-001
+- Claiming Stage 1 Project skeleton: Bun TypeScript tooling, empty-suite guard, and environment example.

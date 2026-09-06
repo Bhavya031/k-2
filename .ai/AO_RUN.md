@@ -55,7 +55,7 @@ Stages 1 and 4 hold independent pieces. Split them across parallel sessions,
 one worktree each, and merge one at a time.
 
 ---|---|---|---|---|---|
-| 1 | Project skeleton | TODO | | | |
+| 1 | Project skeleton | DISPATCHED | ao/k-2-7/root | | |
 | 2 | Config, value types, persistence | TODO | | | |
 | 3 | Foundations | TODO | | | |
 | 4 | Model boundary | TODO | | | |

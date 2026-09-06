@@ -1,0 +1,13 @@
+{
+  "name": "k-2",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "bun": "1.4.2"
+  },
+  "scripts": {
+    "typecheck": "bun build --target=bun --no-bundle --outdir=/tmp/k-2-typecheck $(find src scripts test -type f -name '*.ts')",
+    "test": "bun run scripts/test.ts"
+  },
+  "packageManager": "bun@1.4.2"
+}

@@ -20,8 +20,8 @@ describe("integer finance values", () => {
     expect(negative.ok).toBeTrue();
     if (!positive.ok || !negative.ok) return;
 
-    expect(positive.value).toBe(1_250);
-    expect(negative.value).toBe(-1_250);
+    expect(Number(positive.value)).toBe(1_250);
+    expect(Number(negative.value)).toBe(-1_250);
   });
 
   test("rejects non-integer and unsafe money", () => {
@@ -36,7 +36,7 @@ describe("integer finance values", () => {
     const validQuantity = quantity(12_420);
     expect(validQuantity.ok).toBeTrue();
     if (!validQuantity.ok) return;
-    expect(validQuantity.value).toBe(12_420);
+    expect(Number(validQuantity.value)).toBe(12_420);
     expect(quantity(-1)).toEqual({
       ok: false,
       issues: [{ field: "quantity", message: "must not be negative" }],
@@ -50,8 +50,8 @@ describe("integer finance values", () => {
     expect(validRate.ok).toBeTrue();
     expect(maximumConfidence.ok).toBeTrue();
     if (!validRate.ok || !maximumConfidence.ok) return;
-    expect(validRate.value).toBe(200);
-    expect(maximumConfidence.value).toBe(MAX_BASIS_POINTS);
+    expect(Number(validRate.value)).toBe(200);
+    expect(Number(maximumConfidence.value)).toBe(MAX_BASIS_POINTS);
     expect(rate(MAX_BASIS_POINTS + 1).ok).toBeFalse();
     expect(confidence(-1).ok).toBeFalse();
     expect(confidence(99.9).ok).toBeFalse();
@@ -72,10 +72,10 @@ describe("provenance-backed facts", () => {
     if (!result.ok) return;
 
     expect(result.value.value).toBe("12.420 MT");
-    expect(result.value.provenance.document).toBe(source.document);
+    expect(String(result.value.provenance.document)).toBe(source.document);
     expect(result.value.provenance.page).toBe(source.page);
-    expect(result.value.provenance.confidence).toBe(source.confidence);
-    expect(result.value.provenance.recordedAt).toBe(source.recordedAt);
+    expect(Number(result.value.provenance.confidence)).toBe(source.confidence);
+    expect(String(result.value.provenance.recordedAt)).toBe(source.recordedAt);
   });
 
   test("rejects facts whose provenance omits a source field", () => {
@@ -99,7 +99,7 @@ describe("provenance-backed facts", () => {
     const dateResult = recordedTime(new Date("2026-09-06T03:14:15.000Z"));
     expect(dateResult.ok).toBeTrue();
     if (!dateResult.ok) return;
-    expect(dateResult.value).toBe(source.recordedAt);
+    expect(String(dateResult.value)).toBe(source.recordedAt);
   });
 });
 
@@ -113,7 +113,7 @@ describe("bulk operation outcomes", () => {
     expect(outcome.processed).toEqual([{ item: "synthetic-page-1", value: "stored" }]);
     expect(outcome.skipped).toHaveLength(1);
     expect(outcome.skipped[0]?.item).toBe("synthetic-page-2");
-    expect(outcome.skipped[0]?.reason).toBe("already handled by intake");
+    expect(String(outcome.skipped[0]?.reason)).toBe("already handled by intake");
   });
 
   test("does not permit an unexplained skipped item", () => {

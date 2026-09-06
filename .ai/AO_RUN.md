@@ -25,10 +25,10 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Post-stage composition — Stage 9 — REVIEW. The original eight-stage board below is retained unchanged.
+**Stage:** Post-stage real-demo preparation/run — IN PROGRESS on `ao/k-2-25/root`. The original eight-stage board below is retained unchanged.
 **Main:** Stages 1–8 merged — foundation through the offline report page.
 **Suite in Stage 9 worktree:** 102 pass, 0 fail, 338 expect() calls across 16 files; typecheck clean.
-**Blocking:** nothing. Stage 9 persists `source_documents.ingest_source_sha256` with an inclusive segmented page range for reliable ingestion, ledger, and report joins; no original stage was renumbered.
+**Blocking:** none currently. The real-demo worker owns the shipped Codex CLI shim and production run. Stage 9 persists `source_documents.ingest_source_sha256` with an inclusive segmented page range for reliable ingestion, ledger, and report joins; no original stage was renumbered.
 
 ---
 

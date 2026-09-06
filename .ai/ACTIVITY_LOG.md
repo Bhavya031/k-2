@@ -203,3 +203,6 @@ The repository carries the memory, not the chat.
 - implementation commits a2abc77 and f64365b; composed the persisted production ingest/classify, segment, extract, accrual, match, and simulated payment-draft paths, with content-hash source-document linkage.
 - `bun test`: 102 pass, 0 fail, 338 expect() calls across 16 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: removed the `ThreeWayMatcher.run` handoff; both named Stage 9 E2E tests failed, including expected accrual status `invoiced`, received `incurred`; restored exactly and reran green.
+
+## 2026-09-06 — /root — START POST-STAGE-REAL-DEMO
+- Building shipped Codex CLI local-model shim, then running the production batch and synthetic invoice demonstration only outside this repository.

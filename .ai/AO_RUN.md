@@ -56,7 +56,7 @@ one worktree each, and merge one at a time.
 
 ---|---|---|---|---|---|
 | 1 | Project skeleton | TODO | | | |
-| 2 | Config, value types, persistence | TODO | | | |
+| 2 | Config, value types, persistence | DISPATCHED (configuration only) | ao/k-2-8/root | | |
 | 3 | Foundations | TODO | | | |
 | 4 | Model boundary | TODO | | | |
 | 5 | Real provider and test harness | TODO | | | |

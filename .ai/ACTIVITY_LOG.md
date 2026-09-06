@@ -20,3 +20,6 @@ Format:
 ```
 
 The repository carries the memory, not the chat.
+
+## 2026-09-06 00:00 IST — root/local — START TASK-001
+- Building the Stage 1 startup-only configuration parser and validated frozen config object.

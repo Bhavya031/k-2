@@ -311,6 +311,23 @@ function stableValue(value: unknown): string {
   return JSON.stringify(value);
 }
 
+export type ResolvedField<T> = Readonly<{ value: T | undefined; competingValueCount: number }>;
+
+/** Chooses deterministic page evidence while preserving disagreement metadata. */
+export function resolveFieldValues<T>(values: readonly Fact<T>[]): ResolvedField<T> {
+  if (values.length === 0) return Object.freeze({ value: undefined, competingValueCount: 0 });
+  const candidates = new Map<string, Fact<T>[]>();
+  for (const entry of values) candidates.set(stableValue(entry.value), [...(candidates.get(stableValue(entry.value)) ?? []), entry]);
+  const ordered = [...candidates.values()].map((facts) => {
+    const best = [...facts].sort((left, right) => Number(right.provenance.confidence) - Number(left.provenance.confidence)
+      || left.provenance.page - right.provenance.page)[0]!;
+    return Object.freeze({ count: facts.length, best });
+  }).sort((left, right) => right.count - left.count
+    || Number(right.best.provenance.confidence) - Number(left.best.provenance.confidence)
+    || left.best.provenance.page - right.best.provenance.page);
+  return Object.freeze({ value: ordered[0]!.best.value, competingValueCount: ordered.length });
+}
+
 /** Deterministically rolls already-extracted pages. It has no provider parameter and makes no model call. */
 export function rollExtractedPages<Type extends ExtractionDocumentType>(pages: readonly ExtractedPage<Type>[]): RolledDocument<Type> {
   if (pages.length === 0) throw new Error("Cannot roll zero extracted pages");

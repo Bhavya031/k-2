@@ -4,6 +4,7 @@ import {
   extractPageFields,
   printedAmountToPaise,
   printedKilogramsToQuantity,
+  resolveFieldValues,
   rollExtractedPages,
   type ExtractionDocumentType,
   type PageExtractionRequest,
@@ -101,5 +102,41 @@ describe("Stage 4 field extraction", () => {
     expect(rolled.fields.quantity?.disagreement).toBe(true);
     expect(rolled.disagreements).toEqual([{ field: "quantity" }]);
     expect(rolled.fields.challanNumber?.disagreement).toBeUndefined();
+  });
+
+  test("resolves A, A, B by frequency while retaining the vendor disagreement", async () => {
+    const provider = syntheticProvider(
+      { challanNumber: "SYN-1", vendor: "B", quantity: "1,000 kg" },
+      { challanNumber: "SYN-1", vendor: "A", quantity: "1,000 kg" },
+      { challanNumber: "SYN-1", vendor: "A", quantity: "1,000 kg" },
+    );
+    const first = await extractPageFields(provider, request("delivery_challan", 1));
+    const second = await extractPageFields(provider, request("delivery_challan", 2));
+    const third = await extractPageFields(provider, request("delivery_challan", 3));
+    if (!first.ok || !second.ok || !third.ok) throw new Error("synthetic fixture must validate");
+    const rolled = rollExtractedPages([first.value, second.value, third.value]);
+    const resolved = resolveFieldValues(rolled.fields.vendor!.values);
+    expect(resolved).toEqual({ value: "A", competingValueCount: 2 });
+    expect(rolled.fields.vendor?.disagreement).toBe(true);
+    expect(rolled.disagreements).toContainEqual({ field: "vendor" });
+  });
+
+  test("resolves equally frequent candidates by confidence then lower page number deterministically", async () => {
+    const provider = syntheticProvider(
+      { challanNumber: "SYN-2", vendor: "ગુજરાતી નામ", quantity: "1,000 kg" },
+      { challanNumber: "SYN-2", vendor: "Latin name", quantity: "1,000 kg" },
+    );
+    const low = await extractPageFields(provider, { ...request("delivery_challan", 1), confidenceBasisPoints: 9000 });
+    const high = await extractPageFields(provider, { ...request("delivery_challan", 2), confidenceBasisPoints: 9500 });
+    if (!low.ok || !high.ok) throw new Error("synthetic fixture must validate");
+    expect(resolveFieldValues([low.value.fields.vendor!, high.value.fields.vendor!])).toEqual({ value: "Latin name", competingValueCount: 2 });
+    const first = resolveFieldValues([high.value.fields.vendor!, { ...low.value.fields.vendor!, provenance: { ...low.value.fields.vendor!.provenance, confidence: high.value.fields.vendor!.provenance.confidence } }]);
+    const second = resolveFieldValues([{ ...low.value.fields.vendor!, provenance: { ...low.value.fields.vendor!.provenance, confidence: high.value.fields.vendor!.provenance.confidence } }, high.value.fields.vendor!]);
+    expect(first).toEqual({ value: "ગુજરાતી નામ", competingValueCount: 2 });
+    expect(second).toEqual(first);
+  });
+
+  test("returns undefined when no page produced a field", () => {
+    expect(resolveFieldValues([])).toEqual({ value: undefined, competingValueCount: 0 });
   });
 });

@@ -1,9 +1,9 @@
 import { Database } from "bun:sqlite";
 
 import type { AppConfig } from "../config.ts";
-import { extractPageFields, rollExtractedPages, type ExtractionDocumentType, type RolledDocument } from "../extract/extract.ts";
+import { extractPageFields, resolveFieldValues, rollExtractedPages, type ExtractionDocumentType, type RolledDocument } from "../extract/extract.ts";
 import { ingestPdf, type IngestResult, type PdfRenderer } from "../ingest/ingest.ts";
-import { AccrualLedger, saveExtractedSupplierBankDetails } from "../ledger/accruals.ts";
+import { AccrualLedger, DELIVERY_DATA_REVIEW_PRIORITY, saveExtractedSupplierBankDetails } from "../ledger/accruals.ts";
 import { ThreeWayMatcher, type MatchResult, type SupplierInvoiceForMatch } from "../matching/match.ts";
 import type { StructuredProvider } from "../model/boundary.ts";
 import { PaymentRuns, type PaymentRunResult } from "../payments/runs.ts";
@@ -103,7 +103,21 @@ function exactVendorId(database: Database, name: string | undefined): string | u
 
 function field<Type extends ExtractionDocumentType>(document: RolledDocument<Type>, name: string): FieldValue | undefined {
   const rolled = (document.fields as Record<string, Readonly<{ values: readonly Readonly<{ value: FieldValue }>[]; disagreement?: true }>>)[name];
-  return rolled === undefined || rolled.disagreement === true ? undefined : rolled.values[0]?.value;
+  return rolled === undefined ? undefined : resolveFieldValues(rolled.values as Parameters<typeof resolveFieldValues<FieldValue>>[0]).value;
+}
+
+function recordExtractionDisagreements(queue: ReviewQueue, database: Database, id: string, extracted: RolledDocument<ExtractionDocumentType>, reviewedAt: string): void {
+  for (const { field: name } of extracted.disagreements) {
+    const rolled = (extracted.fields as Record<string, Readonly<{ values: readonly Readonly<{ value: FieldValue }>[] }>>)[name]!;
+    const resolved = resolveFieldValues(rolled.values as Parameters<typeof resolveFieldValues<FieldValue>>[0]);
+    const values = [...new Set(rolled.values.map((entry) => JSON.stringify(entry.value)))];
+    const reviewId = `extraction-disagreement:${id}:${name}`;
+    if (database.query("SELECT id FROM review_items WHERE id = ?").get(reviewId) !== null) continue;
+    queue.enqueue({ id: reviewId, subjectId: id, priority: DELIVERY_DATA_REVIEW_PRIORITY, createdAt: reviewedAt,
+      decisionPrompt: `Confirm the selected ${name} from conflicting page evidence.`,
+      evidence: `Competing printed values: ${values.join(", ")}; selected: ${JSON.stringify(resolved.value)}.`,
+    });
+  }
 }
 
 async function extractSegment(options: BatchPipelineOptions, id: string, segment: SegmentedDocument, pages: readonly StoredPage[], type: ExtractionDocumentType): Promise<RolledDocument<ExtractionDocumentType> | undefined> {
@@ -184,6 +198,7 @@ export async function runBatchPipeline(options: BatchPipelineOptions): Promise<B
       documents.push({ sourceDocumentId: id, sourceSha256: segment.sourceSha256, firstPage: segment.firstPage, lastPage: segment.lastPage, kind: "needs_review", reason: "extraction_failed" });
       continue;
     }
+    recordExtractionDisagreements(queue, options.database, id, extracted, options.reviewedAt);
     const accrual = accrueDelivery(ledger, options.database, id, extracted, options.reviewedAt);
     if (accrual !== undefined) accruals.push(accrual);
     const invoice = supplierInvoice(options.database, id, extracted);

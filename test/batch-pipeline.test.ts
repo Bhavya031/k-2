@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 
 import { saveVendorTerms } from "../src/ledger/accruals.ts";
 import { runBatchCommand } from "../src/pipeline/cli.ts";
+import { runBatchPipeline } from "../src/pipeline/batch.ts";
 import { buildReport } from "../src/report/report.ts";
 import type { PdfRenderer } from "../src/ingest/ingest.ts";
 import type { StructuredProvider } from "../src/model/boundary.ts";
@@ -115,5 +116,35 @@ describe("Stage 9 post-stage batch composition", () => {
     for (const table of ["source_documents", "document_pages", "accruals", "accrual_matches", "payment_runs", "payment_run_lines"]) {
       expect(database.query(`SELECT count(*) AS count FROM ${table}`).get()).toEqual({ count: table === "source_documents" || table === "document_pages" ? 2 : 1 });
     }
+  });
+
+  test("accrues a delivery with competing byte-distinct vendor names and queues one evidence review", async () => {
+    const database = new Database(":memory:"); databases.push(database);
+    const options = await syntheticOptions(database);
+    const classifier: StructuredProvider = { async request() { return { data: { documentType: "delivery_challan", confidenceBasisPoints: 9_000, summary: "Synthetic delivery", labels: ["synthetic"] } }; } };
+    let fields = 0;
+    const extractor: StructuredProvider = { async request() { return { data: [
+      { challanNumber: "SYN-DISAGREE", challanDate: "2026-09-01", vendor: "Synthetic Aggregate Ltd", quantity: "12,420 kg" },
+      { challanNumber: "SYN-DISAGREE", challanDate: "2026-09-01", vendor: "સિન્થેટિક એગ્રીગેટ", quantity: "12,420 kg" },
+    ][fields++] }; } };
+    const boundary: StructuredProvider = { async request(request) { return { data: { judgements: (request.images ?? []).map((image) => { const pageNumber = Number(/^page-(\d+)/.exec(image.label)![1]); return { pageNumber, startsDocument: pageNumber === 1, confidenceBasisPoints: 9_000 }; }) } }; } };
+    const result = await runBatchPipeline({ ...options, classificationProvider: classifier, extractionProvider: extractor, boundaryProvider: boundary });
+
+    expect(result.accruals).toEqual([expect.objectContaining({ kind: "accrued" })]);
+    expect(database.query("SELECT count(*) AS count FROM accruals").get()).toEqual({ count: 1 });
+    expect(database.query("SELECT decision_prompt, evidence, priority FROM review_items WHERE id LIKE 'extraction-disagreement:%'").all()).toEqual([{
+      decision_prompt: "Confirm the selected vendor from conflicting page evidence.", evidence: 'Competing printed values: "Synthetic Aggregate Ltd", "સિન્થેટિક એગ્રીગેટ"; selected: "Synthetic Aggregate Ltd".', priority: 50,
+    }]);
+  });
+
+  test("still skips a delivery when every page omits its vendor", async () => {
+    const database = new Database(":memory:"); databases.push(database);
+    const options = await syntheticOptions(database);
+    const classifier: StructuredProvider = { async request() { return { data: { documentType: "delivery_challan", confidenceBasisPoints: 9_000, summary: "Synthetic delivery", labels: ["synthetic"] } }; } };
+    const extractor: StructuredProvider = { async request() { return { data: { challanNumber: "SYN-NO-VENDOR", challanDate: "2026-09-01", quantity: "12,420 kg" } }; } };
+    const boundary: StructuredProvider = { async request(request) { return { data: { judgements: (request.images ?? []).map((image) => { const pageNumber = Number(/^page-(\d+)/.exec(image.label)![1]); return { pageNumber, startsDocument: pageNumber === 1, confidenceBasisPoints: 9_000 }; }) } }; } };
+    const result = await runBatchPipeline({ ...options, classificationProvider: classifier, extractionProvider: extractor, boundaryProvider: boundary });
+    expect(result.accruals).toEqual([{ kind: "skipped", reason: "missing vendor", reviewItemId: expect.any(String) }]);
+    expect(database.query("SELECT count(*) AS count FROM accruals").get()).toEqual({ count: 0 });
   });
 });

@@ -1,0 +1,16 @@
+{
+  "name": "k-2",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "bun": "1.4.2"
+  },
+  "scripts": {
+    "typecheck": "bun x --package typescript@5.9.2 tsc --noEmit",
+    "test": "bun run scripts/test.ts"
+  },
+  "packageManager": "bun@1.4.2",
+  "devDependencies": {
+    "bun-types": "1.4.2"
+  }
+}

@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 1 merged; Stage 2 next.
+Last updated: 2026-09-06 — Stage 2 complete and awaiting review.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Stage 1 merged. Stage 2 next.
+**Stage:** Stage 2 — Model boundary — awaiting review from `ao/k-2-12/root`.
 **Main:** Stage 1 merged — project skeleton, configuration, value types, and store.
 **Suite on main:** 32 pass, 0 fail, 79 expect() calls across 4 files; typecheck clean.
 **Blocking:** nothing.
@@ -41,7 +41,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
 | 1 | Foundation | MERGED | PRs #3, #2, #4, #1 | 28e5e23, 1e12ef4, 17e2a27, d2551fc | 32 pass, 0 fail; 79 expect() calls / 4 files; typecheck clean |
-| 2 | Model boundary | TODO | | | |
+| 2 | Model boundary | REVIEW | ao/k-2-12/root | 0110c5c | 40 pass, 0 fail; 111 expect() calls / 5 files; typecheck clean |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |
 | 5 | Review queue and intake | TODO | | | |

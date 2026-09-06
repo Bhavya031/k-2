@@ -99,3 +99,11 @@ The repository carries the memory, not the chat.
 - mutation check: changing the generated source from `const bad: number = "not a number";` to `const bad: number = 1;` made `typecheck command rejects a semantic TypeScript error` fail with `Expected: not 0`; reverted exactly and reran green.
 
 - 2026-09-06 — Stage 1 merged: PRs #3, #2, #4, and #1 (28e5e23, 1e12ef4, 17e2a27, d2551fc); final `bun test` 32 pass, 0 fail, 79 expect() calls across 4 files; `bun run typecheck` passed.
+
+## 2026-09-06 15:00 IST — /root — START STAGE-2
+- Building the structured model boundary with schema-only retry behavior, real provider selection, and network-free synthetic fixtures.
+
+## 2026-09-06 15:10 IST — /root — FINISH STAGE-2
+- implementation commit 0110c5c95d286fa91b597cad31d94defd6f705d9; structured-only model boundary, Anthropic tool constraints, local binary adapter, and synthetic network-free tests landed.
+- `bun test`: 40 pass, 0 fail, 111 expect() calls across 5 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changing the retry loop from `number <= maxAttempts` to `number < maxAttempts` made `retries only invalid structured data, feeding each validation error into the next attempt` fail with `expect(received).toMatchObject(expected)` and made `fails loudly after bounded invalid responses with all attempts and validation errors` fail with `Expected length: 2` / `Received length: 1`; restored exactly and reran green.

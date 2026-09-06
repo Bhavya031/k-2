@@ -24,7 +24,7 @@ function eligible(database: Database, suffix: string, grossPaise: number, status
   });
   database.run(`INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points)
     VALUES (?, ?, ?, 'SIM', ?, 1, 'tonne', '2026-09-01', 'invoiced', 9000)`, [`accrual-${suffix}`, `delivery-${suffix}`, vendorId, grossPaise]);
-  database.run("INSERT INTO accrual_matches (id, accrual_id, invoice_source_document_id, score_basis_points, variance_paise, variance_cause, status, matched_on) VALUES (?, ?, ?, 10000, 0, ?, ?, '2026-09-06')", [`match-${suffix}`, `accrual-${suffix}`, `invoice-${suffix}`, status === "variance" ? "synthetic variance" : null, status]);
+  database.run("INSERT INTO accrual_matches (id, accrual_id, invoice_source_document_id, score_basis_points, variance_paise, variance_cause, status, matched_on) VALUES (?, ?, ?, 10000, 0, ?, ?, '2026-09-06')", [`match-${suffix}`, `accrual-${suffix}`, `invoice-${suffix}`, status === "variance" ? "quantity_variance" : null, status]);
 }
 
 function runs(database: Database): PaymentRuns { return new PaymentRuns(database, new ReviewQueue(database)); }

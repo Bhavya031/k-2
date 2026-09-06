@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 1 value-types sub-piece corrected and ready for review.
+Last updated: 2026-09-06 — seeded, nothing built.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Stage 1 value-types sub-piece corrected and ready for review.
+**Stage:** none started.
 **Main:** seed commit only — specification, rules, task board, demo inputs.
 **Suite on main:** no tests exist yet.
 **Blocking:** nothing.
@@ -40,7 +40,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
-| 1 | Foundation | TODO | | | |
+| 1 | Foundation | DISPATCHED | #3 and #2 merged; #4 integrating | 1e12ef4 | 17 pass, 0 fail |
 | 2 | Model boundary | TODO | | | |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |
@@ -53,30 +53,6 @@ Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.
 
 Stages 1 and 4 hold independent pieces. Split them across parallel sessions,
 one worktree each, and merge one at a time.
-
----|---|---|---|---|---|
-| 1 | Project skeleton | TODO | | | |
-| 2 | Config, value types, persistence (value types) | REVIEW | ao/k-2-9/root | 2ab571348748efb1c12b0937db708bc7564f4089 | 13 pass, 0 fail; typecheck pass |
-| 3 | Foundations | TODO | | | |
-| 4 | Model boundary | TODO | | | |
-| 5 | Real provider and test harness | TODO | | | |
-| 6 | Ingestion and classification | TODO | | | |
-| 7 | Structure | TODO | | | |
-| 8 | Meaning | TODO | | | |
-| 9 | Retrieval and reach | TODO | | | |
-| 10 | Report surface | TODO | | | |
-| 11 | Rehearsal | TODO | | | |
-| 12 | Safety | TODO | | | |
-| 13 | Ledger storage | TODO | | | |
-| 14 | Accruals | TODO | | | |
-| 15 | Three-way match | TODO | | | |
-| 16 | Payment run | TODO | | | |
-| 17 | Ledger on the report surface | TODO | | | |
-
-Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.
-
-Stages 2, 3 and 7 hold several independent pieces. Split them across parallel
-sessions, one worktree each, and merge them one at a time.
 
 ---
 

@@ -139,3 +139,11 @@ The repository carries the memory, not the chat.
 - implementation commit 1e6488f20f676d05781a741e0f00140d7eaa31d4; strict local review queue, true two-worker claim race, transactional decisions/audit, and correction provenance protection landed.
 - `bun test`: 61 pass, 0 fail, 179 expect() calls across 9 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: changed the automated-upsert guard to allow a human value; `correcting replaces the extracted integer value with human provenance and blocks later automation` failed with `expect(received).toEqual(expected)` (expected human quantity 12400, received automated 99999); restored exactly and reran green.
+
+## 2026-09-06 00:00 IST — /root — START STAGE-5-PIECE-B
+- Building only the fake-transport messaging-phone intake and decision surface, adapting existing ingestion and an injected review-decision port.
+
+## 2026-09-06 00:00 IST — /root — FINISH STAGE-5-PIECE-B
+- implementation commit 44947b988409bfd8b331816967b9376523095f1f; fake-transport phone intake, Stage 3 ingestion port, localized review surface, single-value correction prompt, and injected queue-decision port landed.
+- `bun test`: 60 pass, 0 fail, 181 expect() calls across 9 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: replaced the configured-token gate with `if (true)`; four Stage 5 tests failed, including `routes an allowed synthetic photograph to the Stage 3 ingestion port and presents its classified review document` with expected `{ available: true }`, received `{ available: false }`; restored exactly and reran green.

@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 2 merged; Stage 3 next.
+Last updated: 2026-09-06 — Stage 3 ready for review.
 
 ---
 
@@ -25,9 +25,9 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Stage 2 merged. Stage 3 — Ingest and classify — next.
-**Main:** Stages 1–2 merged — foundation plus structured model boundary.
-**Suite on main:** 40 pass, 0 fail, 111 expect() calls across 5 files; typecheck clean.
+**Stage:** Stage 3 — Ingest and classify — ready for review.
+**Main:** Stages 1–2 merged; Stage 3 is on `ao/k-2-13/root` awaiting review.
+**Suite in Stage 3 worktree:** 44 pass, 0 fail, 128 expect() calls across 6 files; typecheck clean.
 **Blocking:** nothing.
 
 **Open question the human has not answered:** the agreed rate per tonne for the
@@ -42,7 +42,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 |---|---|---|---|---|---|
 | 1 | Foundation | MERGED | PRs #3, #2, #4, #1 | 28e5e23, 1e12ef4, 17e2a27, d2551fc | 32 pass, 0 fail; 79 expect() calls / 4 files; typecheck clean |
 | 2 | Model boundary | MERGED | PR #5 | a95f930 | 40 pass, 0 fail; 111 expect() calls / 5 files; typecheck clean |
-| 3 | Ingest and classify | TODO | | | |
+| 3 | Ingest and classify | REVIEW | ao/k-2-13/root | 556d72d | 44 pass, 0 fail; 128 expect() calls / 6 files; typecheck clean |
 | 4 | Segment and extract | TODO | | | |
 | 5 | Review queue and intake | TODO | | | |
 | 6 | Ledger and accruals | TODO | | | |

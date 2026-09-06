@@ -45,5 +45,5 @@ You do not write product code.
 | 4 | Segment and extract | MERGED | PRs #7, #8 | 912fd71, 246b875 | 54 pass, 0 fail; 162 expect() calls / 8 files; typecheck clean |
 | 5 | Review queue and intake + Gmail security follow-up | REVIEW | feat/gmail-intake | follow-up pending | 163 pass, 0 fail; 552 expect() calls / 22 files; typecheck clean |
 | 6 | Ledger and accruals | MERGED | PR #12 | db34e88, 00cf902 | 76 pass, 0 fail; 240 expect() calls / 12 files; typecheck clean |
-| 7 | Match and payment run + RazorpayX security | REVIEW | ao/k-2-30/razorpayx-security | pending | 166 pass, 0 fail; 593 expect() calls / 22 files; typecheck clean |
+| 7 | Match and payment run + RazorpayX security | REVIEW | ao/k-2-30/razorpayx-security | 7945156 | 166 pass, 0 fail; 593 expect() calls / 22 files; typecheck clean |
 | 8 | The report page | REVIEW | ao/k-2-23/report-page | 1addcc5 | 99 pass, 0 fail; 313 expect() calls / 15 files; typecheck clean |

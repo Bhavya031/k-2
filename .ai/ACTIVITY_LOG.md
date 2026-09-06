@@ -344,3 +344,12 @@ The repository carries the memory, not the chat.
 - Required mutation `re-emit file zero-row`: named test `returns a zero-row planned file request as an explicit no-match screen answer without a file offer` failed (received `kind: "file"`, `filename: "unbilled-accruals.csv"`); restored exactly and reran green.
 - Required mutation `unconditional image`: named test `does not render an image element for an unresolvable review source` failed because the source-page guard was absent; restored exactly and reran green.
 - Started the loopback server with a populated synthetic permitted database: page response 16,705 bytes; external-host reference count 0; embedded page script parsed successfully.
+
+## 2026-09-07 — /root — START ASK-LEDGER-REFERENCE-LAYOUT
+- Restyling the loopback ask-ledger surface to the requested sidebar and focused search layout while retaining the established safe ask, empty-result, table, and evidence-image behaviour.
+
+## 2026-09-07 — /root — FINISH ASK-LEDGER-REFERENCE-LAYOUT
+- Restyled only the inline ask-ledger presentation and navigation into the requested focused sidebar/search layout. The existing localhost binding, response shapes, SQL, figures, review write path, and payment boundary are unchanged.
+- `bun run test --timeout 30000`: 188 pass, 0 fail, 794 `expect()` calls across 25 files; `bun run typecheck` and `git diff --check`: passed.
+- Mutation check: replaced the resolved-page condition with `if (true)`; named test `does not render an image element for an unresolvable review source` failed because the guarded image source was absent. Restored exactly and reran green.
+- Served a synthetic populated permitted database: page response 19,057 bytes; external-host reference count 0; stylesheet contains `resize:none` and has no `resize:vertical`. Three identical `/api/ask` requests each returned the same explicit no-match screen response.

@@ -13,7 +13,8 @@
     "ask-ledger": "bun scripts/ask-ledger.ts",
     "watch-intake": "bun src/pipeline/intake-watch-cli.ts",
     "telegram-intake": "bun src/messaging/telegram-cli.ts",
-    "gmail-intake": "bun scripts/gmail-intake.ts"
+    "gmail-intake": "bun scripts/gmail-intake.ts",
+    "seed-demo": "bun scripts/seed-demo-data.ts"
   },
   "packageManager": "bun@1.4.2",
   "devDependencies": {

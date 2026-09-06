@@ -38,8 +38,8 @@ function commandProvider(): StructuredProvider {
       { documentType: "invoice", confidenceBasisPoints: 9_000, summary: "Synthetic invoice", labels: ["synthetic"] },
     ][classifications++] };
     return { data: [
-      { challanNumber: "SYN-DEL-1", challanDate: "2026-09-01", vendor: "Synthetic Aggregate Ltd", quantity: "12,420 kg" },
-      { invoiceNumber: "SYN-DEL-1", invoiceDate: "2026-09-07", vendor: "Synthetic Aggregate Ltd", amount: "₹ 1,552.50", supplierBankDetails: { accountNumber: "SYNTHETIC-ACCOUNT", ifscCode: "SYNB0000123", bankName: "Synthetic Bank" } },
+      { challanNumber: "SYN-DEL-1", challanDate: "01/09/2026", vendor: "Synthetic Aggregate Ltd", quantity: "12,420 kg" },
+      { invoiceNumber: "SYN-DEL-1", invoiceDate: "07/09/2026", vendor: "Synthetic Aggregate Ltd", amount: "₹ 1,552.50", supplierBankDetails: { accountNumber: "SYNTHETIC-ACCOUNT", ifscCode: "SYNB0000123", bankName: "Synthetic Bank" } },
     ][extractions++] };
   } };
 }
@@ -92,7 +92,7 @@ describe("Stage 9 post-stage batch composition", () => {
     ]);
     expect(database.query("SELECT count(*) AS count FROM document_pages").get()).toEqual({ count: 2 });
     expect(result.accruals).toEqual([{ kind: "accrued", accrualId: `accrual:source:${result.ingestion.documentHash}:1:1`, amountPaise: 155_250 }]);
-    expect(database.query("SELECT amount_paise, status, source_document_id FROM accruals").get()).toEqual({ amount_paise: 155_250, status: "invoiced", source_document_id: `source:${result.ingestion.documentHash}:1:1` });
+    expect(database.query("SELECT amount_paise, incurred_on, status, source_document_id FROM accruals").get()).toEqual({ amount_paise: 155_250, incurred_on: "2026-09-01", status: "invoiced", source_document_id: `source:${result.ingestion.documentHash}:1:1` });
     expect(result.matches).toMatchObject([{ kind: "matched", status: "exact", variancePaise: 0 }]);
     expect(database.query("SELECT count(*) AS count FROM accrual_matches").get()).toEqual({ count: 1 });
     expect(result.paymentRun?.instructions).toMatchObject([{ vendorId: "synthetic-vendor", accountNumber: "SYNTHETIC-ACCOUNT", ifsc: "SYNB0000123", amountPaise: 147_488 }]);

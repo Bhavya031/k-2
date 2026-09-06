@@ -12,7 +12,11 @@ export type ModelConfiguration =
   | Readonly<{ provider: "anthropic"; apiKey: string; modelName: string }>
   | Readonly<{ provider: "local"; command?: string }>;
 
-export type MessagingConfiguration = Readonly<{ botToken: string }>;
+export type MessagingConfiguration = Readonly<{
+  botToken: string;
+  /** Sender identifiers permitted to use phone intake; an empty list permits nobody. */
+  allowedSenders: readonly string[];
+}>;
 
 export type AppConfig = Readonly<{
   databasePath: string;
@@ -91,10 +95,21 @@ function parseModelConfiguration(environment: Environment): ModelConfiguration {
   );
 }
 
+function parseAllowedSenders(environment: Environment): readonly string[] {
+  const value = optional(environment, "MESSAGING_ALLOWED_SENDERS");
+  if (value === undefined) return Object.freeze([]);
+  const senders = value.split(",").map((sender) => sender.trim());
+  if (senders.some((sender) => sender.length === 0)) {
+    return configurationError("MESSAGING_ALLOWED_SENDERS", "must be a comma-separated list without empty sender identifiers");
+  }
+  return Object.freeze([...new Set(senders)]);
+}
+
 function parseConfig(environment: Environment): AppConfig {
   const modelMaxConcurrency = parseConcurrency(environment);
   const botToken = optional(environment, "MESSAGING_BOT_TOKEN");
   const boundaryModel = optional(environment, "BOUNDARY_MODEL");
+  const allowedSenders = parseAllowedSenders(environment);
 
   return Object.freeze({
     databasePath: required(environment, "DATABASE_PATH"),
@@ -102,7 +117,7 @@ function parseConfig(environment: Environment): AppConfig {
     ...(modelMaxConcurrency === undefined ? {} : { modelMaxConcurrency }),
     ...(botToken === undefined
       ? {}
-      : { messaging: Object.freeze({ botToken }) }),
+      : { messaging: Object.freeze({ botToken, allowedSenders }) }),
     ...(boundaryModel === undefined ? {} : { boundaryModel }),
   });
 }

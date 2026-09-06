@@ -56,11 +56,12 @@ describe("loadConfig", () => {
       ...baseEnvironment,
       MODEL_MAX_CONCURRENCY: "4",
       MESSAGING_BOT_TOKEN: "synthetic-bot-token",
+      MESSAGING_ALLOWED_SENDERS: "synthetic-driver-1, synthetic-driver-2, synthetic-driver-1",
       BOUNDARY_MODEL: "synthetic-boundary-model",
     });
 
     expect(config.modelMaxConcurrency).toBe(4);
-    expect(config.messaging).toEqual({ botToken: "synthetic-bot-token" });
+    expect(config.messaging).toEqual({ botToken: "synthetic-bot-token", allowedSenders: ["synthetic-driver-1", "synthetic-driver-2"] });
     expect(config.boundaryModel).toBe("synthetic-boundary-model");
     expect(Object.isFrozen(config.messaging)).toBe(true);
   });
@@ -111,4 +112,9 @@ describe("loadConfig", () => {
       ).toThrow("MODEL_MAX_CONCURRENCY");
     },
   );
+
+  test("rejects blank sender identifiers in the optional messaging allow-list", () => {
+    expect(() => loadConfig({ ...baseEnvironment, MESSAGING_BOT_TOKEN: "synthetic-token", MESSAGING_ALLOWED_SENDERS: "synthetic-driver-1,,synthetic-driver-2" })).toThrow("MESSAGING_ALLOWED_SENDERS");
+  });
+
 });

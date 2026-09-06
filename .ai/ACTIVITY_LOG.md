@@ -117,3 +117,6 @@ The repository carries the memory, not the chat.
 - mutation check: changed the existing-document condition from `exists !== null` to `exists === null`; all 4 Stage 3 tests failed with `TypeError: null is not an object (evaluating '...page_count')`; restored exactly and reran the whole suite green.
 
 - 2026-09-06 — Stage 3 merged: PR #6 (f42cd26); final `bun test` 44 pass, 0 fail, 128 `expect()` calls across 6 files; `bun run typecheck` passed; `git diff --check` passed.
+
+## 2026-09-06 16:30 IST — /root — START STAGE-4-EXTRACT-B
+- Building only typed per-document field extraction and deterministic per-page rollup with synthetic fixtures; segmentation is out of scope.

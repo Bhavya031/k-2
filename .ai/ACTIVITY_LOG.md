@@ -315,3 +315,15 @@ The repository carries the memory, not the chat.
 - Restored the cold-start handoff, dispatch template, and stage-board context. Internally generated payment-run narration now replaces every non `[A-Za-z0-9 ]` run with one space and trims; caller-provided unsafe narration remains refused. No payout transport exists.
 - `bun run test`: 168 pass, 0 fail, 600 `expect()` calls across 22 files; `bun run typecheck` and `git diff --check` passed. Hyphenated simulated from-run probe: `accepted: 1 refused: 0`.
 - Mutation checks: removing generated-narration sanitization failed `sanitizes hyphenated payment-run narration and never falls back to vendor terms` (expected accepted length 1, received 0); replacing the fund-account guard with `if (false)` failed `refuses active verified methods without a usable RazorpayX fund account id`; replacing the integer-paise guard with `if (false)` failed `rejects non-integer, negative, and unsafe payment instruction paise` (expected throw, none thrown). Restored each exactly.
+
+## 2026-09-06 — /root — START SYNTHETIC-DEMO-DATA-SEEDER
+- Claiming the synthetic/simulated demo-data seeder: deterministic migrated-store-only sample ledger, payment preparation, review queue, and verification.
+
+## 2026-09-06 — /root — FINISH SYNTHETIC-DEMO-DATA-SEEDER
+- Added migrated-store-only deterministic synthetic/simulated seeding, with 9 visibly fictional vendors, 36 derived accruals, 7 review items (4 open), and a simulated payment-preparation run with 10 integer-deduction lines. The seed never writes bank/payment-method details or creates schema.
+- `bun run test`: 167 pass, 0 fail, 705 `expect()` calls across 23 files; `bun run typecheck` and `git diff --check`: passed. Scratch synthetic/simulated store through `bun run ask-ledger` returned overview counts Vendors 9, Accruals 36, Open review items 4.
+- required mutation checks: changed accrual pricing to constant `1`; named `seeds derived accrual amounts, realistic lifecycle counts, reviews, and no payment-method rows` failed with `Expected: 1033574` / `Received: 1`. Then added a synthetic `vendor_payment_methods` write; the same named test failed with `SQLiteError: no such table: vendor_payment_methods`. Both changes were restored byte-for-byte and the full suite reran green.
+
+## 2026-09-06 — /root — SYNTHETIC-DEMO-DATA-SEEDER REBASE
+- Rebasing PR #32 onto current main retained both activity histories. Main now supplies the human-verification `vendor_payment_methods` schema at migration version 5; the seeder validates that version and the test now proves the table has zero generated rows.
+- `bun run test`: 179 pass, 0 fail, 765 `expect()` calls across 24 files; `bun run typecheck` and `git diff --check`: passed. Rebase mutation inserted one otherwise-valid synthetic method; named `seeds derived accrual amounts, realistic lifecycle counts, reviews, and no payment-method rows` failed with expected `{ count: 0 }`, received `{ count: 1 }`; restored exactly.

@@ -88,7 +88,9 @@ describe("Stage 10 asking the ledger", () => {
     try {
       expect(server.url).toStartWith("http://127.0.0.1:");
       const overview = await (await fetch(`${server.url}api/overview`)).json() as Array<{ label: string; count: number }>;
+      expect(overview).toContainEqual({ label: "Vendors", count: 1 });
       expect(overview).toContainEqual({ label: "Accruals", count: 2 });
+      expect(overview).toContainEqual({ label: "Open review items", count: 1 });
       const answer = await (await fetch(`${server.url}api/ask`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: "what needs review?" }) })).json() as { citations: unknown[] };
       expect(answer.citations).toEqual([{ table: "review_items", id: "r-1", label: "Review r-1 (subject doc-1)" }]);
       const check = new Database(path, { readonly: true });

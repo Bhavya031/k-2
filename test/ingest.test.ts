@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
@@ -26,7 +27,27 @@ function syntheticClassifier(onRequest?: () => Promise<void>): StructuredProvide
   };
 }
 
+async function concatenatedTenderFixture(): Promise<Readonly<{ pdf: string; directory: string }>> {
+  const directory = await mkdtemp(join(tmpdir(), "k2-poppler-padding-"));
+  const pdf = join(directory, "twelve-pages.pdf");
+  const child = Bun.spawn({ cmd: ["qpdf", "--empty", "--pages", realTenderPdf, realTenderPdf, realTenderPdf, realTenderPdf, "--", pdf], stdout: "pipe", stderr: "pipe" });
+  const exitCode = await child.exited;
+  if (exitCode !== 0) throw new Error(`qpdf fixture creation failed: ${(await new Response(child.stderr).text()).trim()}`);
+  return Object.freeze({ pdf, directory });
+}
+
 describe("Stage 3 PDF ingestion", () => {
+  test("PopplerPdfRenderer reads page 8 when Poppler pads a multi-page output suffix", async () => {
+    const fixture = await concatenatedTenderFixture();
+    try {
+      const bytes = await new PopplerPdfRenderer().renderPage(fixture.pdf, 8);
+      expect([...bytes.slice(0, 8)]).toEqual([...png.slice(0, 8)]);
+      expect(bytes.length).toBeGreaterThan(8);
+    } finally {
+      await rm(fixture.directory, { recursive: true, force: true });
+    }
+  });
+
   test("ingests a tracked real multi-page government tender without altering its source bytes", async () => {
     const before = new Uint8Array(await readFile(realTenderPdf));
     const database = new Database(":memory:");

@@ -39,3 +39,8 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 08:57 IST — root/Codex — START TASK-001
 - Adding official Bun type declarations so whole-tree TypeScript checks cover Bun APIs and environment access.
+
+## 2026-09-06 08:58 IST — root/Codex — FINISH TASK-001
+- implementation commit d89f6b332db087e4aaff4841ab34b982d320acda; official Bun 1.4.2 type declarations now cover the whole TypeScript tree, including Bun APIs and process environment access.
+- after `git fetch origin`, `bun run typecheck`, `bun test`, and `bun run test` passed on this branch based on `origin/main`: 4 pass, 0 fail, 6 expect() calls across 1 file; prompt check not applicable; `git diff --check` passed.
+- mutation check: changing the generated source from `const bad: number = "not a number";` to `const bad: number = 1;` made `typecheck command rejects a semantic TypeScript error` fail with `Expected: not 0`; reverted exactly and reran green.

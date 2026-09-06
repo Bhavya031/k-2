@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Ledger document surface is in REVIEW on `ao/k-2-29/ledger-documents`; the original eight-stage board is retained unchanged.
+Last updated: 2026-09-06 — Documentation/demo runbook is in REVIEW on `ao/k-2-31/documentation`; the original eight-stage board is retained unchanged.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Maintenance claim:** Ledger document surface — REVIEW on `ao/k-2-29/ledger-documents`; eight-stage table unchanged.
+**Maintenance claim:** Documentation/demo runbook — REVIEW on `ao/k-2-31/documentation` (`e99c384`); this documentation-only task leaves the eight-stage table unchanged.
 **Stage:** Stage 10 exception-review follow-up — REVIEW. The localhost ledger surface now has the existing ReviewQueue as its only bookkeeping write path; the original eight-stage board below is retained unchanged.
 **Parallel claim:** Telegram `MessagingTransport` adapter — REVIEW on `ao/k-2-28/root`; watcher work remains separate.
 **Main:** Stages 1–8 merged — foundation through the offline report page.

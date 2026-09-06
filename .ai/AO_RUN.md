@@ -120,3 +120,11 @@ Newest last. One line per stage, written when it merges.
   public tender notices committed. No product code.
 
 - 2026-09-06 — Stage 2 merged: PR #5 (a95f930); final `bun test` 40 pass, 0 fail, 111 expect() calls across 5 files; `bun run typecheck` passed.
+
+## Post-stage handoff
+
+- 2026-09-06 — POST-STAGE-INTAKE-WATCH REVIEW: portable polling intake folders
+  are implemented on `ao/k-2-27/intake-watch`. The watcher delegates each
+  stable PDF to the existing production batch command, reports pending work,
+  and moves successes/failures to their documented folders. The eight-stage
+  board above remains the only stage board.

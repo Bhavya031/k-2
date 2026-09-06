@@ -226,3 +226,9 @@ The repository carries the memory, not the chat.
 - Added a polished localhost accountant exception queue, source-page routes, and the existing atomic ReviewQueue claim/decision path as the surface’s only write path; no payment/model/ledger writes.
 - `bun test`: 116 pass, 0 fail, 384 `expect()` calls across 18 files; `bun run typecheck` and `git diff --check`: passed.
 - mutation check: removed the ledger safe-integer predicate; `rejects an unsafe integer query result before it can be rendered` failed exactly with expected `amount must be a safe integer`, received `amountPaise must be a safe integer`; restored exactly and reran green.
+## 2026-09-06 — /root — START POST-STAGE-INTAKE-WATCH
+- Building a portable polling watcher around the existing production batch command; no Stage 10 ask surface or real-demo work.
+
+## 2026-09-06 — /root — FINISH POST-STAGE-INTAKE-WATCH
+- implementation pending commit; `bun test` 113 pass, 0 fail, 379 `expect()` calls across 18 files; `bun run typecheck` and `git diff --check` passed.
+- mutation check: replaced the two-poll size equality gate with `if (true)`; named test `processes an arrived PDF only after its size is unchanged across two polls and then reports no pending work` failed (expected pending `arrival.pdf`, received immediate processed result). Restored the exact gate and reran it green.

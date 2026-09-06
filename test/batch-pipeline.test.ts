@@ -6,10 +6,11 @@ import { Database } from "bun:sqlite";
 import { afterEach, describe, expect, test } from "bun:test";
 
 import { saveVendorTerms } from "../src/ledger/accruals.ts";
-import { runBatchPipeline } from "../src/pipeline/batch.ts";
+import { runBatchCommand } from "../src/pipeline/cli.ts";
 import { buildReport } from "../src/report/report.ts";
 import type { PdfRenderer } from "../src/ingest/ingest.ts";
 import type { StructuredProvider } from "../src/model/boundary.ts";
+import type { AppConfig } from "../src/config.ts";
 import { migrateStore } from "../src/store/schema.ts";
 
 const databases: Database[] = [];
@@ -27,9 +28,19 @@ class SyntheticRenderer implements PdfRenderer {
   async renderPage(_path: string, pageNumber: number): Promise<Uint8Array> { return new Uint8Array([...PNG, pageNumber]); }
 }
 
-function responses(...items: readonly unknown[]): StructuredProvider {
-  let index = 0;
-  return { async request() { return { data: items[index++] }; } };
+function commandProvider(): StructuredProvider {
+  let classifications = 0;
+  let extractions = 0;
+  return { async request(request) {
+    if (request.schema.name === "page_classification") return { data: [
+      { documentType: "delivery_challan", confidenceBasisPoints: 9_000, summary: "Synthetic delivery", labels: ["synthetic"] },
+      { documentType: "invoice", confidenceBasisPoints: 9_000, summary: "Synthetic invoice", labels: ["synthetic"] },
+    ][classifications++] };
+    return { data: [
+      { challanNumber: "SYN-DEL-1", challanDate: "2026-09-01", vendor: "Synthetic Aggregate Ltd", quantity: "12,420 kg" },
+      { invoiceNumber: "SYN-DEL-1", invoiceDate: "2026-09-07", vendor: "Synthetic Aggregate Ltd", amount: "₹ 1,552.50", supplierBankDetails: { accountNumber: "SYNTHETIC-ACCOUNT", ifscCode: "SYNB0000123", bankName: "Synthetic Bank" } },
+    ][extractions++] };
+  } };
 }
 
 function boundaries(): StructuredProvider {
@@ -52,23 +63,23 @@ async function syntheticOptions(database: Database) {
   });
   return {
     database, pdfPath, config: { modelMaxConcurrency: 1 }, renderer: new SyntheticRenderer(),
-    classificationProvider: responses(
-      { documentType: "delivery_challan", confidenceBasisPoints: 9_000, summary: "Synthetic delivery", labels: ["synthetic"] },
-      { documentType: "invoice", confidenceBasisPoints: 9_000, summary: "Synthetic invoice", labels: ["synthetic"] },
-    ),
-    boundaryProvider: boundaries(),
-    extractionProvider: responses(
-      { challanNumber: "SYN-DEL-1", challanDate: "2026-09-01", vendor: "Synthetic Aggregate Ltd", quantity: "12,420 kg" },
-      { invoiceNumber: "SYN-DEL-1", invoiceDate: "2026-09-07", vendor: "Synthetic Aggregate Ltd", amount: "₹ 1,552.50", supplierBankDetails: { accountNumber: "SYNTHETIC-ACCOUNT", ifscCode: "SYNB0000123", bankName: "Synthetic Bank" } },
-    ),
     matchedOn: "2026-09-07", reviewedAt: REVIEWED, paymentRunId: "synthetic-run-1", paymentRunOn: "2026-09-07",
   } as const;
 }
 
+async function runSyntheticCommand(options: Awaited<ReturnType<typeof syntheticOptions>>) {
+  let output = "";
+  const config: AppConfig = Object.freeze({ databasePath: ":memory:", model: Object.freeze({ provider: "local" }) as AppConfig["model"], modelMaxConcurrency: options.config.modelMaxConcurrency });
+  return runBatchCommand(["--pdf", options.pdfPath, "--payment-run-id", options.paymentRunId, "--payment-run-on", options.paymentRunOn, "--matched-on", options.matchedOn, "--reviewed-at", options.reviewedAt], {
+    loadConfig: () => config, openDatabase: () => options.database, createProvider: commandProvider,
+    createBoundaryProvider: boundaries, renderer: options.renderer, closeDatabase: () => {}, write: (contents) => { output += contents; },
+  });
+}
+
 describe("Stage 9 post-stage batch composition", () => {
-  test("takes an invented batch through the real production handoffs into one report-visible persisted store", async () => {
+  test("executes the production batch command through every persisted handoff into one report-visible store", async () => {
     const database = new Database(":memory:"); databases.push(database);
-    const result = await runBatchPipeline(await syntheticOptions(database));
+    const result = await runSyntheticCommand(await syntheticOptions(database));
 
     expect(result.ingestion).toMatchObject({ duplicate: false, pageCount: 2, classifiedPages: 2 });
     expect(database.query("SELECT count(*) AS count FROM ingest_documents").get()).toEqual({ count: 1 });
@@ -92,10 +103,10 @@ describe("Stage 9 post-stage batch composition", () => {
     expect(buildReport(database)).toContain(`source:${result.ingestion.documentHash}:1:1`);
   });
 
-  test("re-running an invented batch recognizes its content and does not duplicate source, ledger, match, or payment rows", async () => {
+  test("re-executing the production batch command recognizes its content and does not duplicate source, ledger, match, or payment rows", async () => {
     const database = new Database(":memory:"); databases.push(database);
-    await runBatchPipeline(await syntheticOptions(database));
-    const rerun = await runBatchPipeline(await syntheticOptions(database));
+    await runSyntheticCommand(await syntheticOptions(database));
+    const rerun = await runSyntheticCommand(await syntheticOptions(database));
 
     expect(rerun.ingestion.duplicate).toBe(true);
     expect(rerun.accruals.map((item) => item.kind)).toEqual(["already-accrued"]);

@@ -115,3 +115,5 @@ The repository carries the memory, not the chat.
 - implementation commit 556d72d63f850db24cfafc199cbeb5c2b1a28609; content-addressed original tender PDF storage, bounded Poppler page rendering and Stage 2 boundary classification, page rows, and explicit unreadable results landed.
 - `bun test`: 44 pass, 0 fail, 128 expect() calls across 6 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: changed the existing-document condition from `exists !== null` to `exists === null`; all 4 Stage 3 tests failed with `TypeError: null is not an object (evaluating '...page_count')`; restored exactly and reran the whole suite green.
+
+- 2026-09-06 — Stage 3 merged: PR #6 (f42cd26); final `bun test` 44 pass, 0 fail, 128 `expect()` calls across 6 files; `bun run typecheck` passed; `git diff --check` passed.

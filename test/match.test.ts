@@ -68,6 +68,34 @@ describe("Stage 7 Piece A deterministic three-way matching", () => {
     ]);
   });
 
+  test("admits MALIYADHARA versus MALIADHARA as a one-edit vendor-name variant without awarding vendor-ID points", () => {
+    const database = store();
+    fixture(database, "maliyadhara", { vendorId: "maliyadhara-vendor", vendorName: "MALIYADHARA" });
+    database.run("INSERT INTO vendors (id, name, status) VALUES ('synthetic-vendor', 'Synthetic Invoice Vendor', 'active')");
+    const bill = invoice(database, "maliyadhara", { vendorId: undefined, vendorName: "MALIADHARA" });
+
+    expect(run(database, [bill])).toEqual([expect.objectContaining({ kind: "matched", scoreBasisPoints: 10_000,
+      reasons: ["reference", "exact_money", "date_close", "vendor_name_variant"] })]);
+  });
+
+  test("does not admit a five-character vendor-name pair at edit distance one", () => {
+    const database = store();
+    fixture(database, "short-floor", { vendorId: "short-floor-vendor", vendorName: "ABCDE" });
+    database.run("INSERT INTO vendors (id, name, status) VALUES ('synthetic-vendor', 'Synthetic Invoice Vendor', 'active')");
+    const bill = invoice(database, "short-floor", { vendorId: undefined, vendorName: "ABCDF" });
+
+    expect(run(database, [bill])).toEqual([expect.objectContaining({ kind: "unmatched", reason: "no_candidate", scoreBasisPoints: 0 })]);
+  });
+
+  test("does not admit vendor names at edit distance three even when both names are at least six characters", () => {
+    const database = store();
+    fixture(database, "distance-three", { vendorId: "distance-three-vendor", vendorName: "ABCDEFG" });
+    database.run("INSERT INTO vendors (id, name, status) VALUES ('synthetic-vendor', 'Synthetic Invoice Vendor', 'active')");
+    const bill = invoice(database, "distance-three", { vendorId: undefined, vendorName: "XYZDEFG" });
+
+    expect(run(database, [bill])).toEqual([expect.objectContaining({ kind: "unmatched", reason: "no_candidate", scoreBasisPoints: 0 })]);
+  });
+
   test("excludes dates before the accrual and after the configured delay window before scoring", () => {
     const database = store(); fixture(database, "dates");
     const before = invoice(database, "before", { invoiceDate: "2026-08-31" });

@@ -175,3 +175,4 @@ The repository carries the memory, not the chat.
 
 - 2026-09-06 — Stage 7 Piece A START: deterministic three-way matching.
 - 2026-09-06 — Stage 7 Piece A FINISH: `bun test` 84 pass, 0 fail, 256 `expect()` calls across 13 files; `bun run typecheck` passed; `git diff --check` passed. Mutation: replaced signed invoice-accrual variance with `Math.abs`; named signed-variance test failed with expected `-1000`, received `1000`; restored and reran green.
+- 2026-09-06 — Stage 7 Piece A review follow-up: added vendor-name gate boundaries (MALIYADHARA/MALIADHARA, five-character floor, distance three); `bun test` 87 pass, 0 fail, 259 `expect()` calls across 13 files; `bun run typecheck` and `git diff --check` passed.

@@ -40,7 +40,7 @@ it and will route every delivery to review instead. Ask again before Stage 14.
 
 | # | Stage | Status | Branch | Commit | Suite |
 |---|---|---|---|---|---|
-| 1 | Foundation | TODO | | | |
+| 1 | Foundation | DISPATCHED | #3 merged; #2 integrating | 28e5e23 | 4 pass, 0 fail |
 | 2 | Model boundary | TODO | | | |
 | 3 | Ingest and classify | TODO | | | |
 | 4 | Segment and extract | TODO | | | |
@@ -53,30 +53,6 @@ Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.
 
 Stages 1 and 4 hold independent pieces. Split them across parallel sessions,
 one worktree each, and merge one at a time.
-
----|---|---|---|---|---|
-| 1 | Project skeleton | REVIEW | ao/k-2-7/root | d89f6b3 | 4 pass, 0 fail |
-| 2 | Config, value types, persistence | TODO | | | |
-| 3 | Foundations | TODO | | | |
-| 4 | Model boundary | TODO | | | |
-| 5 | Real provider and test harness | TODO | | | |
-| 6 | Ingestion and classification | TODO | | | |
-| 7 | Structure | TODO | | | |
-| 8 | Meaning | TODO | | | |
-| 9 | Retrieval and reach | TODO | | | |
-| 10 | Report surface | TODO | | | |
-| 11 | Rehearsal | TODO | | | |
-| 12 | Safety | TODO | | | |
-| 13 | Ledger storage | TODO | | | |
-| 14 | Accruals | TODO | | | |
-| 15 | Three-way match | TODO | | | |
-| 16 | Payment run | TODO | | | |
-| 17 | Ledger on the report surface | TODO | | | |
-
-Statuses: `TODO` `DISPATCHED` `REVIEW` `MERGED` `BLOCKED`.
-
-Stages 2, 3 and 7 hold several independent pieces. Split them across parallel
-sessions, one worktree each, and merge them one at a time.
 
 ---
 

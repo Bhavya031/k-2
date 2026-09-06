@@ -21,6 +21,30 @@ Format:
 
 The repository carries the memory, not the chat.
 
+## 2026-09-06 00:00 IST — root/local — START TASK-001
+- Building the Stage 1 startup-only configuration parser and validated frozen config object.
+
+## 2026-09-06 00:00 IST — root/local — FINISH TASK-001
+- implementation commit 60aa234fa02ec79761082f3e1b081202e58670b7; added startup-only validated configuration with optional model capability selection.
+- `bun test`: 8 pass, 0 fail, 11 assertions across 1 file; `bun build src/config.ts --target=bun`: passed; `git diff --check`: passed.
+- mutation check: changed the OpenAI selector branch to `local`; `returns an immutable OpenAI capability for the closed provider selector` failed with `Configuration error: MODEL_PROVIDER must be one of: openai, local` (4 failures total); reverted and the suite passed.
+
+## 2026-09-06 08:51 IST — root/local — START TASK-002
+- Correcting the Stage 1 configuration provider contract and adding declared optional capabilities.
+
+## 2026-09-06 08:54 IST — root/local — FINISH TASK-002
+- implementation commit bad9d61bc8bc5659e196a0ca9e6ccf32cce135ef; corrected the closed provider set and added optional capability configuration.
+- `bun test`: 13 pass, 0 fail, 21 assertions across 1 file; `bun build src/config.ts --target=bun`: passed; `git diff --check`: passed.
+- environment-example mismatch: this worktree has no `.env.example`; skeleton commit fce377f declares `MODEL_MAX_CONCURRENCY` but not `MESSAGING_BOT_TOKEN` or `BOUNDARY_MODEL`. The skeleton owner was directed to add the latter two; this task did not edit that owned file.
+- mutation check: changed the Anthropic selector branch to `local`; `returns an immutable Anthropic configuration` failed with `Configuration error: MODEL_PROVIDER must be one of: anthropic, local` (7 failures total); reverted and the suite passed.
+
+## 2026-09-06 08:56 IST — root/local — BLOCKED TASK-002
+- Required whole-tree package typecheck cannot run: after `git fetch origin`, `origin/main` remains seed commit 591c14f with no `package.json`, and this branch contains no package manifest; `bun run typecheck` reports `Script not found: typecheck`.
+- Full available suite: `bun test` 13 pass, 0 fail, 21 assertions across 1 file; `git diff --check` passed. Mutation changed the Anthropic selector branch to `local`, producing 7 failures including `Configuration error: MODEL_PROVIDER must be one of: anthropic, local`; reverted.
+
+## 2026-09-06 08:59 IST — root/local — PR TASK-002
+- Pushed `ao/k-2-8/root` and opened https://github.com/Bhavya031/k-2/pull/2 against `main`. `ao session claim-pr` is blocked by `PR_PROJECT_MISMATCH`; the orchestrator was notified.
+
 ## 2026-09-06 08:44 IST — root/Codex — START TASK-001
 - Claiming Stage 1 Project skeleton: Bun TypeScript tooling, empty-suite guard, and environment example.
 

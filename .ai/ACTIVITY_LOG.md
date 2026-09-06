@@ -131,3 +131,11 @@ The repository carries the memory, not the chat.
 
 
 - 2026-09-06 — Stage 4 integration merged: PR #7 segmentation (912fd71) and PR #8 extraction (246b875); final `bun test` 54 pass, 0 fail, 162 `expect()` calls across 8 files; `bun run typecheck` passed; `git diff --check` passed. Stage 5 is next; no Stage 5 work dispatched.
+
+## 2026-09-06 17:00 IST — /root — START STAGE-5-QUEUE-A
+- Building only review-queue persistence and API: deterministic priority ordering, atomic claims, audited decisions, and human corrections using synthetic fixtures.
+
+## 2026-09-06 17:20 IST — /root — FINISH STAGE-5-QUEUE-A
+- implementation commit 1e6488f20f676d05781a741e0f00140d7eaa31d4; strict local review queue, true two-worker claim race, transactional decisions/audit, and correction provenance protection landed.
+- `bun test`: 61 pass, 0 fail, 179 expect() calls across 9 files; `bun run typecheck`: passed; `git diff --check`: passed.
+- mutation check: changed the automated-upsert guard to allow a human value; `correcting replaces the extracted integer value with human provenance and blocks later automation` failed with `expect(received).toEqual(expected)` (expected human quantity 12400, received automated 99999); restored exactly and reran green.

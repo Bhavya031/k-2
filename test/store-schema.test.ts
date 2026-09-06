@@ -39,6 +39,9 @@ describe("Stage 1 SQLite store schema", () => {
     expect(tables.map(({ name }) => name)).toEqual([
       "document_pages",
       "ledger_lines",
+      "review_decision_audit",
+      "review_items",
+      "review_values",
       "schema_migrations",
       "source_documents",
       "vendors",

@@ -36,3 +36,6 @@ The repository carries the memory, not the chat.
 - implementation commit 16a096a97bf405b49773314038a1a0944a92229a; real TypeScript 5.9.2 checking, semantic-error proof, and optional environment variables landed.
 - `bun test`: 4 pass, 0 fail, 6 expect() calls across 1 file; `bun run typecheck` and `bun run test` passed; prompt check not applicable; `git diff --check` passed.
 - mutation check: changing the generated source from `const bad: number = "not a number";` to `const bad: number = 1;` made `typecheck command rejects a semantic TypeScript error` fail with `Expected: not 0`; reverted exactly and reran green.
+
+## 2026-09-06 08:57 IST — root/Codex — START TASK-001
+- Adding official Bun type declarations so whole-tree TypeScript checks cover Bun APIs and environment access.

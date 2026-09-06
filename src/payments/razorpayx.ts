@@ -38,6 +38,10 @@ type StoredInstruction = Readonly<{
 
 const SAFE_NARRATION = /^[A-Za-z0-9 ]+$/;
 
+function generatedNarration(runId: string, vendorId: string): string {
+  return `Payment run ${runId} for ${vendorId}`.replace(/[^A-Za-z0-9 ]+/g, " ").trim();
+}
+
 function frozen<T extends object>(value: T): Readonly<T> {
   return Object.freeze(value);
 }
@@ -138,7 +142,7 @@ export function buildRazorpayXPayoutRequestsFromRun(database: Database, runId: s
   const instructions: PaymentInstruction[] = [];
   const refused: RazorpayXRefusal[] = [];
   for (const row of grouped.values()) {
-    instructions.push({ vendorId: row.vendorId, beneficiaryName: "verified separately", accountNumber: row.accountNumber!, ifsc: row.ifsc!, amountPaise: row.amountPaise, narration: `Payment run ${runId} for ${row.vendorId}` });
+    instructions.push({ vendorId: row.vendorId, beneficiaryName: "verified separately", accountNumber: row.accountNumber!, ifsc: row.ifsc!, amountPaise: row.amountPaise, narration: generatedNarration(runId, row.vendorId) });
   }
   for (const row of rows) if (row.accountNumber === null || row.ifsc === null) refused.push(refusal(row.vendorId, "payment run has no verified-method comparison snapshot"));
   const built = build(instructions, run.reference, configuration.companyAccountNumber, database);

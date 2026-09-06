@@ -308,3 +308,10 @@ The repository carries the memory, not the chat.
 - `bun run test`: 166 pass, 0 fail, 593 `expect()` calls across 22 files; `bun run typecheck` and `git diff --check` passed.
 - Required mutations: deleting the account comparison failed `refuses an instruction when even one account-number digit differs from the verified method` with expected refusal vs received `[]`; deleting the IFSC comparison failed `refuses an instruction when its IFSC differs from the verified method` with expected refusal vs received `[]`; adding `Date.now()` to idempotency failed `uses content-derived idempotency: stable for identical content and different at one paise` (same-content key mismatch). Each was restored exactly.
 
+## 2026-09-06 — /root — START RAZORPAYX-PAYOUT-ADAPTER-REVIEW-FOLLOW-UP
+- Claiming PR #29 review fixes: sanitize internally generated narration and prove fund-account and integer-paise guards.
+
+## 2026-09-06 — /root — FINISH RAZORPAYX-PAYOUT-ADAPTER-REVIEW-FOLLOW-UP
+- Restored the cold-start handoff, dispatch template, and stage-board context. Internally generated payment-run narration now replaces every non `[A-Za-z0-9 ]` run with one space and trims; caller-provided unsafe narration remains refused. No payout transport exists.
+- `bun run test`: 168 pass, 0 fail, 600 `expect()` calls across 22 files; `bun run typecheck` and `git diff --check` passed. Hyphenated simulated from-run probe: `accepted: 1 refused: 0`.
+- Mutation checks: removing generated-narration sanitization failed `sanitizes hyphenated payment-run narration and never falls back to vendor terms` (expected accepted length 1, received 0); replacing the fund-account guard with `if (false)` failed `refuses active verified methods without a usable RazorpayX fund account id`; replacing the integer-paise guard with `if (false)` failed `rejects non-integer, negative, and unsafe payment instruction paise` (expected throw, none thrown). Restored each exactly.

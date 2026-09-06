@@ -72,21 +72,41 @@ describe("simulated RazorpayX payout request builder", () => {
     } finally { Date.now = originalNow; }
   });
 
-  test("refuses a narration containing a hyphen", () => {
+  test("refuses a caller-supplied narration containing a hyphen", () => {
     const database = store(); method(database);
     const built = buildRazorpayXPayoutRequests(result("syntheticvendor", "SIM ACCOUNT 0001", "SYNB0123ABC", 12345, "SIMULATED-NARRATION"), configuration, database);
     expect(built.refused).toEqual([{ vendorId: "syntheticvendor", reason: "narration contains unsafe characters" }]);
   });
 
-  test("builds from payment-run snapshots and never falls back to vendor terms", () => {
+  test("sanitizes hyphenated payment-run narration and never falls back to vendor terms", () => {
+    const database = store(); method(database, "vendor-simulated");
+    database.run("INSERT INTO source_documents (id, vendor_id, document_status) VALUES ('source-1', 'vendor-simulated', 'classified')");
+    database.run("INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points) VALUES ('accrual-1', 'source-1', 'vendor-simulated', 'SIM', 12345, 1, 'tonne', '2026-09-06', 'invoiced', 9000)");
+    database.run("INSERT INTO payment_runs (id, run_on, reference, status) VALUES ('draft-2026-09-06', '2026-09-06', 'SIMULATED-RUN-REFERENCE', 'draft')");
+    database.run("INSERT INTO payment_run_lines (id, payment_run_id, accrual_id, gross_paise, tds_paise, retention_paise, net_paise, beneficiary_account_number, beneficiary_ifsc, status) VALUES ('line-1', 'draft-2026-09-06', 'accrual-1', 12345, 0, 0, 12345, 'SIM ACCOUNT 0001', 'SYNB0123ABC', 'draft')");
+    const built = buildRazorpayXPayoutRequestsFromRun(database, "draft-2026-09-06", configuration);
+    expect(built.accepted).toHaveLength(1);
+    expect(built.accepted[0]!.narration).toBe("Payment run draft 2026 09 06 for vendor simulated");
+    expect(built.accepted[0]!.narration).toMatch(/^[A-Za-z0-9 ]+$/);
+    database.run("UPDATE payment_run_lines SET beneficiary_account_number = NULL, beneficiary_ifsc = NULL WHERE id = 'line-1'");
+    expect(buildRazorpayXPayoutRequestsFromRun(database, "draft-2026-09-06", configuration)).toEqual({ accepted: [], refused: [{ vendorId: "vendor-simulated", reason: "payment run has no verified-method comparison snapshot" }] });
+  });
+
+  test("refuses active verified methods without a usable RazorpayX fund account id", () => {
+    const database = store();
+    method(database, "vendor-null-fund", "SIM ACCOUNT 0001", "SYNB0123ABC", "active", null);
+    method(database, "vendor-blank-fund", "SIM ACCOUNT 0002", "SYNB0123ABD", "active", " ");
+    const nullFund = buildRazorpayXPayoutRequests(result("vendor-null-fund"), configuration, database);
+    const blankFund = buildRazorpayXPayoutRequests(result("vendor-blank-fund", "SIM ACCOUNT 0002", "SYNB0123ABD"), configuration, database);
+    expect(nullFund.refused).toEqual([{ vendorId: "vendor-null-fund", reason: "active verified payment method has no RazorpayX fund account id" }]);
+    expect(blankFund.refused).toEqual([{ vendorId: "vendor-blank-fund", reason: "active verified payment method has no RazorpayX fund account id" }]);
+  });
+
+  test("rejects non-integer, negative, and unsafe payment instruction paise", () => {
     const database = store(); method(database);
-    database.run("INSERT INTO source_documents (id, vendor_id, document_status) VALUES ('source', 'syntheticvendor', 'classified')");
-    database.run("INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points) VALUES ('accrual', 'source', 'syntheticvendor', 'SIM', 12345, 1, 'tonne', '2026-09-06', 'invoiced', 9000)");
-    database.run("INSERT INTO payment_runs (id, run_on, reference, status) VALUES ('SIMRUN', '2026-09-06', 'SIMULATED-RUN-REFERENCE', 'draft')");
-    database.run("INSERT INTO payment_run_lines (id, payment_run_id, accrual_id, gross_paise, tds_paise, retention_paise, net_paise, beneficiary_account_number, beneficiary_ifsc, status) VALUES ('line', 'SIMRUN', 'accrual', 12345, 0, 0, 12345, 'SIM ACCOUNT 0001', 'SYNB0123ABC', 'draft')");
-    expect(buildRazorpayXPayoutRequestsFromRun(database, "SIMRUN", configuration).accepted).toHaveLength(1);
-    database.run("UPDATE payment_run_lines SET beneficiary_account_number = NULL, beneficiary_ifsc = NULL WHERE id = 'line'");
-    expect(buildRazorpayXPayoutRequestsFromRun(database, "SIMRUN", configuration)).toEqual({ accepted: [], refused: [{ vendorId: "syntheticvendor", reason: "payment run has no verified-method comparison snapshot" }] });
+    expect(() => buildRazorpayXPayoutRequests(result("syntheticvendor", "SIM ACCOUNT 0001", "SYNB0123ABC", 1_292_160.5), configuration, database)).toThrow("payment instruction amountPaise must be a non-negative safe integer");
+    expect(() => buildRazorpayXPayoutRequests(result("syntheticvendor", "SIM ACCOUNT 0001", "SYNB0123ABC", -1), configuration, database)).toThrow("payment instruction amountPaise must be a non-negative safe integer");
+    expect(() => buildRazorpayXPayoutRequests(result("syntheticvendor", "SIM ACCOUNT 0001", "SYNB0123ABC", Number.MAX_SAFE_INTEGER + 1), configuration, database)).toThrow("payment instruction amountPaise must be a non-negative safe integer");
   });
 
   test("database rejects an invalid IFSC and a second active method for the same vendor", () => {

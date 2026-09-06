@@ -26,6 +26,8 @@ You do not write product code.
 ## Where we are
 
 **Maintenance claim:** Synthetic demo-data seeder — REVIEW on `ao/k-2-32/root`; this maintenance task preserves the original eight-stage table unchanged. Documentation/demo runbook remains REVIEW on `ao/k-2-31/documentation` (`e99c384`).
+**Maintenance claim:** Payment-run phone approval message — REVIEW on `ao/k-2-33/payment-run-approval`; reuses the existing messaging intake and review-decision audit path.
+**Maintenance claim:** Documentation/demo runbook — REVIEW on `ao/k-2-31/documentation` (`e99c384`); this documentation-only task leaves the eight-stage table unchanged.
 **Stage:** Stage 10 exception-review follow-up — REVIEW. The localhost ledger surface now has the existing ReviewQueue as its only bookkeeping write path; the original eight-stage board below is retained unchanged.
 **Parallel claim:** Telegram `MessagingTransport` adapter — REVIEW on `ao/k-2-28/root`; watcher work remains separate.
 **Main:** Stages 1–8 merged — foundation through the offline report page.

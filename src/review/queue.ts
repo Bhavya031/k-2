@@ -131,7 +131,21 @@ export class ReviewQueue {
     };
   }
 
+  claim(itemId: string, who: string, claimedAt: string): boolean {
+    if (!isNonEmptyString(itemId) || !isNonEmptyString(who)) throw new Error("item and claimant must not be empty");
+    assertTimestamp(claimedAt, "claimedAt");
+    return this.database.run(
+      "UPDATE review_items SET state = 'claimed', claimed_by = ?, claimed_at = ? WHERE id = ? AND state = 'pending'",
+      [who, claimedAt, itemId],
+    ).changes === 1;
+  }
+
   decide(itemId: string, decision: Decision): void {
+    this.decideWithEffect(itemId, decision, () => {});
+  }
+
+  /** Records the existing audit row in the same local transaction as a reviewed state effect. */
+  decideWithEffect(itemId: string, decision: Decision, effect: () => void): void {
     if (!isNonEmptyString(itemId) || !isNonEmptyString(decision.decidedBy)) {
       throw new Error("item and decision maker must not be empty");
     }
@@ -150,6 +164,7 @@ export class ReviewQueue {
       if (updated.changes !== 1) throw new Error("review item must be claimed by the decision maker");
 
       const encoded = decision.correctedValue ? encodeValue(decision.correctedValue) : null;
+      effect();
       if (decision.correctedValue) {
         this.database.run(
           `INSERT INTO review_values (review_item_id, value_kind, value_text, value_integer, provenance)

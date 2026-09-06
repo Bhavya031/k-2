@@ -206,3 +206,7 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 — /root — START POST-STAGE-REAL-DEMO
 - Building shipped Codex CLI local-model shim, then running the production batch and synthetic invoice demonstration only outside this repository.
+
+## 2026-09-06 — /root — FINISH POST-STAGE-REAL-DEMO (BLOCKED)
+- commits 42b3b3d and 68c845e; PR #18 opened. External held-out source used pages 1–36, withholding ground-truth documents 10–11 (pages 37–39 and 40–42). A subscription CLI run with an unsupported model was stopped; the supported model reached only page 8 after 111 seconds with concurrency 1, so it was stopped rather than incur unbounded cost. No real content entered this repository.
+- `bun test`: 107 pass, 0 fail, 356 `expect()` calls across 17 files; typecheck and `git diff --check` passed. Shim mutation replacing `--sandbox` failed its command-contract test exactly as expected; restored.

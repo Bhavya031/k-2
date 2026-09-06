@@ -107,3 +107,6 @@ The repository carries the memory, not the chat.
 - implementation commit 0110c5c95d286fa91b597cad31d94defd6f705d9; structured-only model boundary, Anthropic tool constraints, local binary adapter, and synthetic network-free tests landed.
 - `bun test`: 40 pass, 0 fail, 111 expect() calls across 5 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: changing the retry loop from `number <= maxAttempts` to `number < maxAttempts` made `retries only invalid structured data, feeding each validation error into the next attempt` fail with `expect(received).toMatchObject(expected)` and made `fails loudly after bounded invalid responses with all attempts and validation errors` fail with `Expected length: 2` / `Received length: 1`; restored exactly and reran green.
+
+## 2026-09-06 16:00 IST — /root — START STAGE-3
+- Building only multi-page tender-PDF ingestion, bounded rendering/classification, content-addressed persistence, and unreadable-page handling.

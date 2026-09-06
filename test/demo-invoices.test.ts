@@ -1,0 +1,15 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { Database } from "bun:sqlite";
+import { describe, expect, test } from "bun:test";
+import { makeDemoInvoices } from "../scripts/make-demo-invoices.ts";
+import { migrateStore } from "../src/store/schema.ts";
+
+async function text(pdf: string): Promise<string> { const result = Bun.spawnSync({ cmd: ["pdftotext", pdf, "-"] }); return new TextDecoder().decode(result.stdout); }
+function fixture(path: string): void { const db = new Database(path); migrateStore(db); const rows = [["v1", "SYNTHETIC VENDOR ONE", 65000, 1000, 65000], ["v2", "SYNTHETIC VENDOR TWO", 68500, 2000, 137000], ["v3", "જય ખોડિયાર મેટલ", 93400, 3000, 280200]] as const; for (const [id, name, rate, quantity, amount] of rows) { db.run("INSERT INTO vendors VALUES (?, ?, 'active')", [id, name]); db.run("INSERT INTO vendor_terms (vendor_id, rate_paise_per_tonne, effective_on, payment_days) VALUES (?, ?, '2026-01-01', 30)", [id, rate]); db.run("INSERT INTO source_documents (id, vendor_id, document_status) VALUES (?, ?, 'classified')", [`source-${id}`, id]); db.run("INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points) VALUES (?, ?, ?, ?, ?, ?, 'tonne', '2026-07-01', 'incurred', 10000)", [`accrual-${id}`, `source-${id}`, id, `PASS-${id}`, amount, quantity]); } db.close(); }
+
+describe("synthetic/simulated demo invoices", () => {
+  test("refuses an empty database with a named problem", async () => { const dir = await mkdtemp(join(tmpdir(), "k2-demo-empty-")); const db = new Database(join(dir, "empty.sqlite")); migrateStore(db); db.close(); expect(() => makeDemoInvoices(join(dir, "empty.sqlite"), join(dir, "out"))).toThrow("no accruals exist"); await rm(dir, { recursive: true, force: true }); });
+  test("copies Gujarati vendor bytes, uses integer +50, and renders marker PDFs with a rate not quantity variance", async () => { const dir = await mkdtemp(join(tmpdir(), "k2-demo-invoices-")); const database = join(dir, "store.sqlite"), out = join(dir, "out"); fixture(database); const invoices = makeDemoInvoices(database, out); const manifest = JSON.parse(await readFile(join(out, "manifest.json"), "utf8")) as { invoices: typeof invoices }; expect(invoices).toHaveLength(3); const rate = invoices.find(x => x.case === "rate_variance")!, tolerance = invoices.find(x => x.case === "within_tolerance")!; expect(rate.vendor).toBe("જય ખોડિયાર મેટલ"); expect(rate.quantityThousandths).toBe(3000); expect(rate.amountPaise).toBe(297000); expect(tolerance.amountPaise).toBe(137050); expect(manifest.invoices).toEqual(invoices); expect(manifest.invoices.find(x => x.case === "rate_variance")?.vendor).toBe("જય ખોડિયાર મેટલ"); for (const invoice of invoices) { const contents = await text(join(out, invoice.filename)); expect(contents).toContain("SYNTHETIC - SIMULATED DOCUMENT"); expect(contents).toContain(String(invoice.quantityThousandths)); } await rm(dir, { recursive: true, force: true }); });
+});

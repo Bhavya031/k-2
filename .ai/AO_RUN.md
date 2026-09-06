@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — seeded, nothing built.
+Last updated: 2026-09-06 — Stage 1 value-types sub-piece ready for review.
 
 ---
 
@@ -25,7 +25,7 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** none started.
+**Stage:** Stage 1 value-types sub-piece ready for review.
 **Main:** seed commit only — specification, rules, task board, demo inputs.
 **Suite on main:** no tests exist yet.
 **Blocking:** nothing.
@@ -56,7 +56,7 @@ one worktree each, and merge one at a time.
 
 ---|---|---|---|---|---|
 | 1 | Project skeleton | TODO | | | |
-| 2 | Config, value types, persistence (value types) | DISPATCHED | ao/k-2-9/root | | |
+| 2 | Config, value types, persistence (value types) | REVIEW | ao/k-2-9/root | 972fc106c14bb7380cbbcce38e9acdd12eda0c37 | 9 pass, 0 fail |
 | 3 | Foundations | TODO | | | |
 | 4 | Model boundary | TODO | | | |
 | 5 | Real provider and test harness | TODO | | | |

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
@@ -146,7 +146,11 @@ export class PopplerPdfRenderer implements PdfRenderer {
     const prefix = join(directory, "page");
     try {
       await commandText(["pdftoppm", "-png", "-r", "150", "-f", String(pageNumber), "-l", String(pageNumber), pdfPath, prefix]);
-      return new Uint8Array(await readFile(`${prefix}-${pageNumber}.png`));
+      // Poppler zero-pads the suffix when the source has multiple pages (for
+      // example page-01.png), but not consistently for one-page PDFs.
+      const rendered = (await readdir(directory)).filter((name) => /^page-\d+\.png$/.test(name));
+      if (rendered.length !== 1) throw new Error(`pdftoppm did not produce exactly one rendered page for page ${pageNumber}`);
+      return new Uint8Array(await readFile(join(directory, rendered[0]!)));
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

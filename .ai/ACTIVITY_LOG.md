@@ -170,3 +170,5 @@ The repository carries the memory, not the chat.
 - Added non-whole pricing cases above and below half a paise (12,420 × 12,545 = 155,808.9 and 12,420 × 12,544 = 155,796.48) and recorded the rounding-mode test gotcha.
 - `bun test`: 76 pass, 0 fail, 240 expect() calls across 12 files; `bun run typecheck`: passed; `git diff --check`: passed.
 - mutation check: changed integer floor division to round-half-up by adding `500n` before division; `uses one integer floor division for pricing, including remainders on both sides of half a paise` failed: expected `155808`, received `155809`; restored exactly and reran green.
+
+- 2026-09-06 — Stage 6 merged: PR #12 (db34e88, 00cf902); final `bun test` 76 pass, 0 fail, 240 `expect()` calls across 12 files; `bun run typecheck` passed. Stage 7 is next.

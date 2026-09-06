@@ -4,7 +4,7 @@
 needs to continue. If the chat driving this run stops, paste this file into a
 new one and it picks up without re-deriving anything.
 
-Last updated: 2026-09-06 — Stage 9 post-stage composition is in REVIEW; the eight-stage board is retained unchanged.
+Last updated: 2026-09-06 — Stage 10 asking-the-ledger is in REVIEW; the original eight-stage board is retained unchanged.
 
 ---
 
@@ -25,9 +25,9 @@ You do not write product code.
 
 ## Where we are
 
-**Stage:** Post-stage real-demo preparation/run — BLOCKED on subscription CLI throughput; shipped shim is in PR #18. The original eight-stage board below is retained unchanged.
+**Stage:** Stage 10 — Asking the ledger — REVIEW. This is a separate localhost-only live read surface; the original eight-stage board below is retained unchanged.
 **Main:** Stages 1–8 merged — foundation through the offline report page.
-**Suite in Stage 9 worktree:** 102 pass, 0 fail, 338 expect() calls across 16 files; typecheck clean.
+**Suite in Stage 10 worktree:** 113 pass, 0 fail, 373 expect() calls across 18 files; typecheck clean.
 **Blocking:** a 36-page production run is sequential at configured concurrency 1 and only reached page 8 after 111 seconds; stopped rather than burn subscription calls. The real-demo worker owns the shipped Codex CLI shim and production run. Stage 9 persists `source_documents.ingest_source_sha256` with an inclusive segmented page range for reliable ingestion, ledger, and report joins; no original stage was renumbered.
 
 ---

@@ -119,7 +119,7 @@ export function provenance(value: unknown): ValidationResult<Provenance> {
     result.ok ? [] : result.issues,
   );
 
-  if (issues.length > 0) {
+  if (!source.ok || !page.ok || !certainty.ok || !time.ok) {
     return Object.freeze({ ok: false, issues: Object.freeze(issues) });
   }
 

@@ -28,3 +28,6 @@ The repository carries the memory, not the chat.
 - implementation commit 972fc106c14bb7380cbbcce38e9acdd12eda0c37; validated integer units, provenance-backed facts, and explicit skipped-item outcomes landed.
 - `bun test`: 9 pass, 0 fail, 21 assertions across 1 file; typecheck unavailable because this scoped worktree has no project/tooling manifest or typecheck command; `git diff --check`: pass.
 - mutation check: changing quantity validation from `value >= 0` to `value >= -1` failed `stores quantity only as non-negative integer thousandths` with `expect(received).toEqual(expected)` (expected rejection, received `{ ok: true, value: -1 }`); reverted exactly and reran green.
+
+## 2026-09-06 08:48 IST — root/ao — START TASK-002-CORRECTION
+- Correcting value-type validation-result narrowing reported by whole-tree typecheck; adding failure-branch coverage without reading a value.

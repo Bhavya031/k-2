@@ -62,13 +62,13 @@ describe("provenance-backed facts", () => {
 
   test("rejects facts whose provenance omits a source field", () => {
     const result = fact("12.420 MT", { ...source, document: "", page: 0 });
-    expect(result).toEqual({
-      ok: false,
-      issues: [
-        { field: "document", message: "must be a non-empty document identifier" },
-        { field: "page", message: "must be a positive safe integer" },
-      ],
-    });
+    expect(result.ok).toBeFalse();
+    if (result.ok) return;
+
+    expect(result.issues).toEqual([
+      { field: "document", message: "must be a non-empty document identifier" },
+      { field: "page", message: "must be a positive safe integer" },
+    ]);
   });
 
   test("rejects unbounded confidence and invalid recorded times", () => {

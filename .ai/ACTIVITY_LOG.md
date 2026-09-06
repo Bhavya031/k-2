@@ -284,3 +284,6 @@ The repository carries the memory, not the chat.
 - Read the supplied real database only: 1 source document, 3 pages, and one GANESH STONE QUARRY accrual for 1,292,160 paise on 2026-07-18; no raw paper or database content was copied.
 - `bun test --timeout 30000`: 139 pass, 0 fail, 473 `expect()` calls across 21 files; `bun x --package typescript@5.9.2 tsc --noEmit` and `git diff --check`: passed.
 - mutation check: removed `amount_paise AS amountPaise` from `GET /api/documents`; named test `lists document accruals and unresolved documents, then returns document pages and open reviews` failed with the missing `amountPaise: 155250` diff. Restored byte-for-byte and reran green.
+
+## 2026-09-06 — /root — START DOCUMENTATION-DEMO-RUNBOOK
+- Rewriting public README and adding a concise filming runbook from the supplied Rogue One demo script; documentation only, with synthetic/simulated examples and no private documents or credentials.

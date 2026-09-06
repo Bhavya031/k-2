@@ -31,3 +31,9 @@ The repository carries the memory, not the chat.
 
 ## 2026-09-06 08:51 IST — root/local — START TASK-002
 - Correcting the Stage 1 configuration provider contract and adding declared optional capabilities.
+
+## 2026-09-06 08:54 IST — root/local — FINISH TASK-002
+- implementation commit bad9d61bc8bc5659e196a0ca9e6ccf32cce135ef; corrected the closed provider set and added optional capability configuration.
+- `bun test`: 13 pass, 0 fail, 21 assertions across 1 file; `bun build src/config.ts --target=bun`: passed; `git diff --check`: passed.
+- environment-example mismatch: this worktree has no `.env.example`; skeleton commit fce377f declares `MODEL_MAX_CONCURRENCY` but not `MESSAGING_BOT_TOKEN` or `BOUNDARY_MODEL`. The skeleton owner was directed to add the latter two; this task did not edit that owned file.
+- mutation check: changed the Anthropic selector branch to `local`; `returns an immutable Anthropic configuration` failed with `Configuration error: MODEL_PROVIDER must be one of: anthropic, local` (7 failures total); reverted and the suite passed.

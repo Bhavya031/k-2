@@ -58,6 +58,12 @@ describe("Stage 8 offline report", () => {
     expect(data.paymentRuns[0]?.lines).toEqual([expect.objectContaining({ grossPaise: 10000, tdsPaise: 200, retentionPaise: 500, netPaise: 9300 })]);
     expect(report).toContain("quantity read differently");
     expect(report).toContain("Execution is simulated; no bank connection.");
+    expect(report).toContain("Remittance advice · ");
+    expect(report).toContain("Pass/accrual reference");
+    expect(report).toContain("194C TDS");
+    expect(report).toContain("Prepared for a person to send. This report does not transmit payment.");
+    expect(data.paymentRuns[0]?.lines[0]).toMatchObject({ paperReference: "MATCHED-88", grossPaise: 10000, tdsPaise: 200, retentionPaise: 500, netPaise: 9300 });
+    expect(10000 - 200 - 500).toBe(9300);
     expect(report.indexOf("1. Unbilled")).toBeLessThan(report.indexOf("2. Exceptions"));
     expect(report.indexOf("2. Exceptions")).toBeLessThan(report.indexOf("3. Payments"));
   });

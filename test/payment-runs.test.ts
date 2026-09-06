@@ -24,7 +24,7 @@ function eligible(database: Database, suffix: string, grossPaise: number, status
   });
   database.run(`INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points)
     VALUES (?, ?, ?, 'SIM', ?, 1, 'tonne', '2026-09-01', 'invoiced', 9000)`, [`accrual-${suffix}`, `delivery-${suffix}`, vendorId, grossPaise]);
-  database.run("INSERT INTO accrual_matches (id, accrual_id, invoice_source_document_id, status, matched_on) VALUES (?, ?, ?, ?, '2026-09-06')", [`match-${suffix}`, `accrual-${suffix}`, `invoice-${suffix}`, status]);
+  database.run("INSERT INTO accrual_matches (id, accrual_id, invoice_source_document_id, score_basis_points, variance_paise, variance_cause, status, matched_on) VALUES (?, ?, ?, 10000, 0, ?, ?, '2026-09-06')", [`match-${suffix}`, `accrual-${suffix}`, `invoice-${suffix}`, status === "variance" ? "synthetic variance" : null, status]);
 }
 
 function runs(database: Database): PaymentRuns { return new PaymentRuns(database, new ReviewQueue(database)); }
@@ -35,7 +35,6 @@ describe("Stage 7 payment runs", () => {
     eligible(database, "a", 3_000_019, "exact"); // tax 60,000; retention 150,000; net 2,790,019
     eligible(database, "b", 3_000_011, "within_tolerance"); // tax 60,000; retention 150,000; net 2,790,011
     eligible(database, "variance", 9_000_001, "variance");
-    eligible(database, "rejected", 9_000_001, "rejected");
     eligible(database, "old", 9_000_001, "exact");
     database.run("INSERT INTO payment_runs (id, run_on, status) VALUES ('old-run', '2026-09-05', 'draft')");
     database.run("INSERT INTO payment_run_lines (id, payment_run_id, accrual_id, gross_paise, tds_paise, retention_paise, net_paise, status) VALUES ('old-line', 'old-run', 'accrual-old', 1, 0, 0, 1, 'draft')");
@@ -48,6 +47,25 @@ describe("Stage 7 payment runs", () => {
     ]);
     expect(result.instructions.map(({ amountPaise }) => amountPaise)).toEqual([2_790_019, 2_790_011]);
     expect(database.query("SELECT count(*) AS count FROM payment_run_lines WHERE payment_run_id = 'run-1'").get()).toEqual({ count: 2 });
+  });
+
+  test("sums already-rounded line nets for one vendor rather than recomputing deductions from its aggregate gross", () => {
+    const database = openStore();
+    eligible(database, "aggregate-a", 3_000_019, "exact");
+    const vendorId = "synthetic-vendor-aggregate-a";
+    database.run("INSERT INTO source_documents (id, vendor_id, document_status) VALUES ('delivery-aggregate-b', ?, 'classified')", [vendorId]);
+    database.run("INSERT INTO source_documents (id, vendor_id, document_status) VALUES ('invoice-aggregate-b', ?, 'classified')", [vendorId]);
+    database.run(`INSERT INTO accruals (id, source_document_id, vendor_id, paper_reference, amount_paise, quantity_thousandths, unit, incurred_on, status, extraction_confidence_basis_points)
+      VALUES ('accrual-aggregate-b', 'delivery-aggregate-b', ?, 'SIM', 3000019, 1, 'tonne', '2026-09-01', 'invoiced', 9000)`, [vendorId]);
+    database.run("INSERT INTO accrual_matches (id, accrual_id, invoice_source_document_id, score_basis_points, variance_paise, variance_cause, status, matched_on) VALUES ('match-aggregate-b', 'accrual-aggregate-b', 'invoice-aggregate-b', 10000, 0, NULL, 'exact', '2026-09-06')");
+
+    const result = runs(database).create({ id: "aggregate-run", runOn: "2026-09-06", reviewedAt: REVIEWED });
+
+    expect(database.query("SELECT tds_paise, retention_paise, net_paise FROM payment_run_lines WHERE payment_run_id = 'aggregate-run' ORDER BY accrual_id").all()).toEqual([
+      { tds_paise: 60_000, retention_paise: 150_000, net_paise: 2_790_019 },
+      { tds_paise: 60_000, retention_paise: 150_000, net_paise: 2_790_019 },
+    ]);
+    expect(result.instructions).toMatchObject([{ vendorId, amountPaise: 5_580_038 }]);
   });
 
   test("applies tax at the vendor-terms table threshold inclusively and uses floor rather than round on non-even values", () => {

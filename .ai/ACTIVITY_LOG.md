@@ -353,3 +353,11 @@ The repository carries the memory, not the chat.
 - `bun run test --timeout 30000`: 188 pass, 0 fail, 794 `expect()` calls across 25 files; `bun run typecheck` and `git diff --check`: passed.
 - Mutation check: replaced the resolved-page condition with `if (true)`; named test `does not render an image element for an unresolvable review source` failed because the guarded image source was absent. Restored exactly and reran green.
 - Served a synthetic populated permitted database: page response 19,057 bytes; external-host reference count 0; stylesheet contains `resize:none` and has no `resize:vertical`. Three identical `/api/ask` requests each returned the same explicit no-match screen response.
+
+## 2026-09-07 — /root — START ASK-PRESENTATION-SNAPSHOT
+- Updating the ask-ledger presentation only, preserving the existing query and review boundaries.
+
+## 2026-09-07 — /root — FINISH ASK-PRESENTATION-SNAPSHOT
+- Added integer-only Indian paise presentation, table provenance, suggestion submits, quiet status/theme tokens, and fixed evidence-card presentation without changing ledger queries, routes, response shapes, or review/payment boundaries.
+- `bun run test`: 189 pass, 0 fail, 795 `expect()` calls across 25 files; `bun run typecheck` and `git diff --check` passed.
+- Mutation: changed the Indian pair grouping to triples; `formats integer paise with Indian groups` failed with expected Indian forms versus received western grouping. Restored exactly.

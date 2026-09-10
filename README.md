@@ -20,11 +20,14 @@ Telegram Bot API, Gmail API. No runtime dependencies.
 
 ## Powered by
 
-**RazorpayX** is the payment rail — prepared payouts leave over IMPS, in paise,
-under a content-derived idempotency key, and only after a human approves them.
-**Claude** is the pair of eyes: it reads printed fields off scanned paper and
-plans ledger questions, and it never produces a figure. **Maximor** set the
-brief that shaped the whole thing — an office of the CFO that runs itself.
+![Powered by AO, Maximor, Dodo Payments, TensorMux, Neatlogs and AI Grants India](public/powered-by.png)
+
+K-2 was built on **[AO — Agent Orchestrator](https://aoagents.dev)**, the
+hackathon's host and the reason this repository exists: every line of product
+code in `src/` was written by autonomous coding agents dispatched through it,
+across thirty-four merged pull requests. **Maximor** set the brief — an office
+of the CFO that runs itself — and **Dodo Payments**, **TensorMux**,
+**Neatlogs** and **AI Grants India** backed the build.
 
 ## How it works
 

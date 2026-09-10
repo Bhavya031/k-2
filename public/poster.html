@@ -1,0 +1,122 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#14161a; --ink2:#1c1f25; --rule:#2b3038;
+    --paper:#f1efe7; --paper2:#e4e1d6;
+    --hivis:#cfe23a; --muted:#878e98; --slate:#5b6470;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1600px;height:900px}
+  body{
+    background:var(--ink);
+    font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+    color:var(--paper);
+    display:grid; grid-template-columns:1fr 1fr;
+    overflow:hidden;
+  }
+
+  /* ---------- left ---------- */
+  .left{padding:76px 40px 76px 84px; display:flex; flex-direction:column; justify-content:space-between}
+  .mark{display:flex; align-items:center; gap:14px}
+  .mark .k{
+    font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:22px;
+    letter-spacing:.14em; color:var(--ink); background:var(--hivis);
+    padding:5px 11px 4px; border-radius:3px;
+  }
+  .mark .t{font-size:15px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); font-weight:500}
+
+  h1{
+    font-size:82px; line-height:.98; font-weight:800; letter-spacing:-.032em;
+    text-wrap:balance; max-width:13ch; margin-top:0;
+  }
+  h1 em{font-style:normal; color:var(--hivis)}
+  .sub{margin-top:30px; font-size:23px; line-height:1.45; color:#c3c8cf; max-width:30ch; font-weight:400}
+  .sub b{font-weight:600; color:var(--paper)}
+
+  .foot{display:flex; flex-direction:column; gap:9px}
+  .url{font-family:"IBM Plex Mono",monospace; font-size:19px; color:#aeb5be; letter-spacing:-.01em}
+  .credit{font-size:16px; color:var(--slate)}
+  .credit b{color:#7d858f; font-weight:600}
+
+  /* ---------- right ---------- */
+  .right{position:relative; display:flex; align-items:center; justify-content:center}
+  .right::before{
+    content:""; position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 44px),
+      radial-gradient(120% 90% at 62% 40%, #232830 0%, #14161a 68%);
+  }
+
+  .slip{
+    position:relative; width:452px; background:var(--paper); color:#1a1c20;
+    transform:rotate(-2.4deg); box-shadow:0 42px 90px rgba(0,0,0,.55), 0 3px 0 rgba(0,0,0,.25);
+    padding:0 0 26px;
+  }
+  .slip::after{ /* torn perforation at the base */
+    content:""; position:absolute; left:0; right:0; bottom:-9px; height:10px; z-index:1;
+    background:
+      radial-gradient(circle at 6px -1px, transparent 6px, var(--paper) 6.5px) 0 0/12px 10px repeat-x;
+    transform:scaleY(-1);
+  }
+  .slip-h{padding:22px 28px 14px; border-bottom:2px solid #1a1c20}
+  .slip-h .who{font-family:"IBM Plex Mono",monospace; font-size:17px; font-weight:600; letter-spacing:.02em}
+  .slip-h .what{margin-top:5px; font-size:12px; letter-spacing:.19em; text-transform:uppercase; color:#6d7480; font-weight:600}
+
+  table{width:100%; border-collapse:collapse; font-family:"IBM Plex Mono",monospace; font-size:15px}
+  td{padding:11px 28px; border-bottom:1px solid #d3cfc2}
+  td.k{color:#6d7480; font-size:12.5px; letter-spacing:.09em; text-transform:uppercase; width:40%}
+  td.v{text-align:right; font-weight:500; font-variant-numeric:tabular-nums}
+
+  .total{margin:22px 28px 0; padding:16px 18px; background:#1a1c20; color:var(--paper); display:flex; align-items:baseline; justify-content:space-between}
+  .total .l{font-size:12px; letter-spacing:.19em; text-transform:uppercase; color:#9aa1ab; font-weight:600}
+  .total .r{font-family:"IBM Plex Mono",monospace; font-size:29px; font-weight:600; color:var(--hivis); font-variant-numeric:tabular-nums}
+  .note{margin:11px 28px 0; font-size:11.5px; color:#7b8290; font-family:"IBM Plex Mono",monospace}
+
+  .stamp{
+    position:absolute; right:-52px; bottom:-30px; z-index:3; transform:rotate(5deg);
+    background:var(--hivis); color:#14161a; padding:10px 16px 9px;
+    font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:600; letter-spacing:.1em;
+    box-shadow:0 14px 30px rgba(0,0,0,.42);
+  }
+  .paid{
+    position:absolute; left:-52px; top:-20px; z-index:3; transform:rotate(-5deg);
+    background:#f1efe7; color:#1a1c20; padding:9px 15px 8px; border:2px solid #1a1c20;
+    font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; letter-spacing:.08em;
+    box-shadow:0 14px 30px rgba(0,0,0,.42);
+  }
+</style></head>
+<body>
+  <div class="left">
+    <div class="mark"><span class="k">K-2</span><span class="t">Office of the CFO</span></div>
+    <div>
+      <h1>It reads the paper the day the <em>truck</em> arrives.</h1>
+      <p class="sub">Forty suppliers on credit. No purchase orders. For three weeks the money is invisible — <b>K-2 closes that gap</b>, books the accrual, matches the invoice, and pays the vendor.</p>
+    </div>
+    <div class="foot">
+      <div class="url">github.com/Bhavya031/k-2</div>
+      <div class="credit">Built for <b>Syndicate by Maximor</b> &nbsp;·&nbsp; Payments on <b>RazorpayX</b></div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="slip">
+      <div class="paid">TDS 194C &nbsp;WITHHELD</div>
+      <div class="slip-h">
+        <div class="who">GANESH STONE QUARRY</div>
+        <div class="what">Royalty pass &middot; read, not typed</div>
+      </div>
+      <table>
+        <tr><td class="k">Reference</td><td class="v">STQL2502&hellip;32</td></tr>
+        <tr><td class="k">Dispatched</td><td class="v">2026-07-18</td></tr>
+        <tr><td class="k">Net weight</td><td class="v">13.460 t</td></tr>
+        <tr><td class="k">Contract rate</td><td class="v">&#8377;960.00 / t</td></tr>
+      </table>
+      <div class="total"><span class="l">Accrual booked</span><span class="r">&#8377;12,921.60</span></div>
+      <div class="note">13460 &times; 96000 &divide; 1000 — integer paise, no model</div>
+      <div class="stamp">PAYOUT&nbsp;PROCESSED</div>
+    </div>
+  </div>
+</body></html>

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { askLedger, executeLedgerPlan, ledgerPlanSchema } from "../src/asking/ledger.ts";
-import { startLedgerServer } from "../src/asking/server.ts";
+import { formatPaise, startLedgerServer } from "../src/asking/server.ts";
 import type { StructuredProvider, StructuredRequest } from "../src/model/boundary.ts";
 import { migrateStore } from "../src/store/schema.ts";
 import { migrateIngestStore } from "../src/ingest/ingest.ts";
@@ -41,6 +41,9 @@ class CannedProvider implements StructuredProvider {
 }
 
 describe("Stage 10 asking the ledger", () => {
+  test("formats integer paise with Indian groups", () => {
+    expect([0,99,100,92715,1292160,41860887,123456789,-100].map(formatPaise)).toEqual(["₹0.00","₹0.99","₹1.00","₹927.15","₹12,921.60","₹4,18,608.87","₹12,34,567.89","-₹1.00"]);
+  });
   test("validates an exact closed query-plan schema and rejects SQL, prose, and unknown number fields", () => {
     expect(ledgerPlanSchema.validate({ kind: "pass_reference", reference: "PASS-77", template: "plain" }).ok).toBe(true);
     const rejected = ledgerPlanSchema.validate({ kind: "pass_reference", reference: "PASS-77", template: "plain", sql: "SELECT 1", answer: "₹9,999.99" });

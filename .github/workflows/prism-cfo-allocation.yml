@@ -52,7 +52,7 @@ jobs:
         if: ${{ !inputs.preflight_only }}
         with:
           repository: Bhavya031/Prisme
-          ref: ao/prisme-30/prism-json-config
+          ref: main
           path: prism
           token: ${{ secrets.PRISME_READ_TOKEN }}
           persist-credentials: false

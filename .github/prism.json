@@ -6,6 +6,7 @@
     "budget_table": "K2 repository budgets",
     "request_table": "K2 request allocations",
     "decision_table": "K2 decision test",
+    "shared_login_repos": ["Bhavya031/k-2", "Bhavya031/flask", "Bhavya031/werkzeug", "Bhavya031/jinja", "Bhavya031/click", "Bhavya031/markupsafe", "Bhavya031/itsdangerous", "Bhavya031/quart"],
     "column_prefix": "K2 "
   },
   "estimate": {

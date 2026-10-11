@@ -71,7 +71,7 @@ jobs:
           GIT_CONFIG_COUNT: 1
           GIT_CONFIG_KEY_0: url.https://x-access-token:${{ secrets.PRISME_READ_TOKEN }}@github.com/Bhavya031/Prisme.insteadOf
           GIT_CONFIG_VALUE_0: https://github.com/Bhavya031/Prisme
-        run: pip install "git+https://github.com/Bhavya031/Prisme.git@ao/prisme-30/prism-json-config" > /dev/null 2>&1 && python -c 'import neatlogs'
+        run: pip install "git+https://github.com/Bhavya031/Prisme.git@main" > /dev/null 2>&1 && python -c 'import neatlogs'
       - name: Resolve one immutable source commit
         id: source
         run: |
@@ -248,7 +248,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Bhavya031/Prisme
-          ref: ao/prisme-30/prism-json-config
+          ref: main
           path: prism
           token: ${{ secrets.PRISME_READ_TOKEN }}
           persist-credentials: false

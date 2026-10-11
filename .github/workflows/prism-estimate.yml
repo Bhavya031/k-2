@@ -237,7 +237,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Bhavya031/Prisme
-          ref: main
+          ref: 8e4c740f7d7e8144974b0ee8c6f2a5b4aad52e2e
           path: prism
           token: ${{ secrets.PRISME_READ_TOKEN }}
           persist-credentials: false

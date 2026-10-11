@@ -53,7 +53,7 @@ jobs:
         if: ${{ !inputs.preflight_only }}
         with:
           repository: Bhavya031/Prisme
-          ref: ao/prisme-34/cfo-decides
+          ref: ao/prisme-35/files-in-allocation-comment
           path: prism
           token: ${{ secrets.PRISME_READ_TOKEN }}
           persist-credentials: false
@@ -91,6 +91,7 @@ jobs:
             python - "$RUNNER_TEMP/cfo-allocation.json" > "$RUNNER_TEMP/cfo-allocation.md" <<'PY'
           import json, os, sys
           from decimal import Decimal, InvalidOperation
+          from html import escape
 
           data = json.load(open(sys.argv[1]))
           def number(value):
@@ -107,12 +108,18 @@ jobs:
           reserved = number(data.get("reserved_before_usd"))
           cap = number(data.get("usd_cap")) or Decimal(0)
           available = number(data.get("available_usd"))
-          left = available - cap if available is not None else None
+          left = (number(data.get("available_balance_usd")) if data.get("already_recorded")
+                  else available - cap if available is not None else None)
           maximum = number(data.get("request_limit_usd"))
           status = data["decision"]
           print(f"### Prism budget allocation: {status}\n")
           print(f"Requested by @{os.environ['REQUESTER']}\n")
           print("Automated estimation and allocation; decided by the budget rule saved in CFO.ai.\n")
+          if data.get("already_recorded"):
+              print("This request was already recorded; no new reservation was added.\n")
+          files = ", ".join("`" + escape(path, quote=False).replace("`", "'").replace("|", "/").replace("\n", " ").replace("\r", " ") + "`"
+                            for path in data.get("predicted_files", [])) or "none"
+          print(f"Predicted files: {files}\n")
           print("| | USD |\n|---|---:|")
           for label, value in (("Repository budget", budget), ("Spent so far", spent),
                                ("Reserved before this request", reserved), ("This request (cap)", cap),

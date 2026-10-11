@@ -165,7 +165,7 @@ jobs:
           if [ -n "$REPLAY_REF" ]; then search=git; fi
           prism predict "$issue_url" --repo "$entire_repo" --event "$GITHUB_EVENT_PATH" \
             --commit "$commit" --checkout source --search "$search" \
-            --provider claude --format json --max-cost-usd 0.10 --max-output-tokens 4000 \
+            --provider claude --format json --max-cost-usd 0.05 --max-output-tokens 4000 \
             --max-extra-rounds 1 --timeout-seconds 180 > predict.json 2> predict.err || status=$?
           if [ "$status" -eq 0 ]; then
             prism solve-estimate --issue-file issue.txt --prediction predict.json --provider claude \

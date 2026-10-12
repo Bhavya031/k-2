@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/f090dfee-984a-4f79-808e-62aae742b674
+
 # K-2
 
 ![K-2 — it reads the paper the day the truck arrives](public/poster.png)
